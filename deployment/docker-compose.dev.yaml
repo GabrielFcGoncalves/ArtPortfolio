@@ -1,0 +1,49 @@
+services:
+  springboot:
+    build:
+      context: ../Art
+      dockerfile: Dockerfile
+
+    depends_on:
+      - db
+      - mongo
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_USER: ${MONGO_USER}
+      MONGO_DB: ${MONGO_DB}
+
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - /home/gabriel/art/db_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mongo:
+    image: mongo:4.4.6
+    environment:
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_USER: ${MONGO_USER}
+      MONGO_DB: ${MONGO_DB}
+    ports:
+      - "27017:27017"
+
+    volumes:
+      - /home/gabriel/art/mongo_data:/data/db
