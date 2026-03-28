@@ -1,0 +1,246 @@
+[
+  {
+    "realm": "master",
+    "enabled": true,
+    "displayName": "Keycloak",
+    "clients": [
+      {
+        "clientId": "SecureLearning-admin",
+        "enabled": true,
+        "secret": "${KC_CLIENT_SECRET}",
+        "serviceAccountsEnabled": true,
+        "redirectUris": [
+          "${KC_FRONTEND_URL}/admin/*",
+          "${KC_FRONTEND_URL}/admin"
+        ],
+        "webOrigins": [
+          "${KC_HOSTNAME}"
+        ]
+      }
+    ],
+    "users": [
+      {
+        "username": "service-account-securelearning-admin",
+        "enabled": true,
+        "serviceAccountClientId": "SecureLearning-admin",
+        "realmRoles": [
+          "admin",
+          "create-realm"
+        ]
+      }
+    ]
+  },
+  {
+    "realm": "platform",
+    "enabled": true,
+    "loginTheme": "default",
+    "roles": {
+      "realm": [
+        {
+          "name": "ADMIN",
+          "description": "Platform administrator role"
+        },
+        {
+          "name": "ARTIST",
+          "description": "Artist role"
+        },
+        {
+          "name": "USER",
+          "description": "Regular user role"
+        }
+      ]
+    },
+    "users": [
+      {
+        "username": "platform_admin",
+        "enabled": true,
+        "credentials": [
+          {
+            "type": "password",
+            "value": "admin"
+          }
+        ],
+        "realmRoles": [
+          "ADMIN"
+        ]
+      },
+      {
+        "username": "platform_artist",
+        "enabled": true,
+        "credentials": [
+          {
+            "type": "password",
+            "value": "admin"
+          }
+        ],
+        "realmRoles": [
+          "ARTIST"
+        ]
+      },
+      {
+        "username": "platform_user",
+        "enabled": true,
+        "credentials": [
+          {
+            "type": "password",
+            "value": "admin"
+          }
+        ],
+        "realmRoles": [
+          "USER"
+        ]
+      }
+    ],
+    "clients": [
+      {
+        "clientId": "react",
+        "enabled": true,
+        "publicClient": true,
+        "redirectUris": [
+          "${KC_FRONTEND_URL}/*",
+          "${KC_FRONTEND_URL}/admin/*",
+          "${KC_FRONTEND_URL}/artist/*",
+          "${KC_FRONTEND_URL}/user/*"
+        ],
+        "webOrigins": [
+          "${KC_FRONTEND_URL}"
+        ],
+        "protocolMappers": [
+          {
+            "name": "api-audience",
+            "protocol": "openid-connect",
+            "protocolMapper": "oidc-audience-mapper",
+            "config": {
+              "included.client.audience": "api",
+              "access.token.claim": "true"
+            }
+          }
+        ]
+      },
+      {
+        "clientId": "api",
+        "enabled": true,
+        "serviceAccountsEnabled": false,
+        "authorizationServicesEnabled": true,
+        "authorizationSettings": {
+          "allowRemoteResourceManagement": true,
+          "policyEnforcementMode": "ENFORCING",
+          "resources": [
+            {
+              "name": "admin-resource",
+              "type": "urn:api:resources:admin",
+              "displayName": "Platform Admin Resource",
+              "uris": [
+                "/api/admin/*"
+              ],
+              "scopes": [
+                {
+                  "name": "view"
+                },
+                {
+                  "name": "manage"
+                }
+              ]
+            },
+            {
+              "name": "artist-resource",
+              "type": "urn:api:resources:artist",
+              "displayName": "Artist Resource",
+              "uris": [
+                "/api/artist/*"
+              ],
+              "scopes": [
+                {
+                  "name": "view"
+                },
+                {
+                  "name": "manage"
+                }
+              ]
+            },
+            {
+              "name": "user-resource",
+              "type": "urn:api:resources:user",
+              "displayName": "User Resource",
+              "uris": [
+                "/api/user/*"
+              ],
+              "scopes": [
+                {
+                  "name": "view"
+                }
+              ]
+            }
+          ],
+          "policies": [
+            {
+              "name": "ADMIN Role Policy",
+              "type": "role",
+              "logic": "POSITIVE",
+              "decisionStrategy": "UNANIMOUS",
+              "config": {
+                "roles": "[{\"id\":\"ADMIN\",\"required\":false}]"
+              }
+            },
+            {
+              "name": "ARTIST Role Policy",
+              "type": "role",
+              "logic": "POSITIVE",
+              "decisionStrategy": "UNANIMOUS",
+              "config": {
+                "roles": "[{\"id\":\"ARTIST\",\"required\":false}]"
+              }
+            },
+            {
+              "name": "USER Role Policy",
+              "type": "role",
+              "logic": "POSITIVE",
+              "decisionStrategy": "UNANIMOUS",
+              "config": {
+                "roles": "[{\"id\":\"USER\",\"required\":false}]"
+              }
+            },
+            {
+              "name": "Admin Permission",
+              "type": "resource",
+              "logic": "POSITIVE",
+              "decisionStrategy": "UNANIMOUS",
+              "config": {
+                "resources": "[\"admin-resource\"]",
+                "applyPolicies": "[\"ADMIN Role Policy\"]"
+              }
+            },
+            {
+              "name": "Artist Permission",
+              "type": "resource",
+              "logic": "POSITIVE",
+              "decisionStrategy": "UNANIMOUS",
+              "config": {
+                "resources": "[\"artist-resource\"]",
+                "applyPolicies": "[\"ARTIST Role Policy\"]"
+              }
+            },
+            {
+              "name": "User Permission",
+              "type": "resource",
+              "logic": "POSITIVE",
+              "decisionStrategy": "UNANIMOUS",
+              "config": {
+                "resources": "[\"user-resource\"]",
+                "applyPolicies": "[\"USER Role Policy\"]"
+              }
+            }
+          ],
+          "scopes": [
+            {
+              "name": "view"
+            },
+            {
+              "name": "manage"
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

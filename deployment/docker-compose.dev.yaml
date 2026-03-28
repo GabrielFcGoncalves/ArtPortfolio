@@ -1,49 +1,148 @@
 services:
-  springboot:
-    build:
-      context: ../Art
-      dockerfile: Dockerfile
-
-    depends_on:
-      - db
-      - mongo
+  # --- 1. IDENTITY & ACCESS MANAGEMENT (Keycloak) ---
+  iam:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: artist_os_iam
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD}
     ports:
       - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      MONGO_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_USER: ${MONGO_USER}
-      MONGO_DB: ${MONGO_DB}
+    networks:
+      - artist-net
 
-  db:
-    image: postgres:18-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+  # --- 2. RELATIONAL DATA (PostgreSQL) ---
+  # db-relational:
+  #   image: postgres:15-alpine
+  #   container_name: artist_os_postgres
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #     POSTGRES_DB: ${POSTGRES_DB}
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - artist-net
+
+  # --- 3. NON-RELATIONAL DATA (MongoDB) ---
+  # db-nosql:
+  #   image: mongo:latest
+  #   container_name: artist_os_mongodb
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongodata:/data/db
+  #   networks:
+  #     - artist-net
+
+  # --- 4. CACHE LAYER (Redis) ---
+  # cache:
+  #   image: redis:alpine
+  #   container_name: artist_os_redis
+  #   networks:
+  #     - artist-net
+
+  # --- 5. AZURE CLOUD MOCK (Azurite) ---
+  # azure-mock:
+  #   image: mcr.microsoft.com/azure-storage/azurite
+  #   container_name: artist_os_azurite
+  #   ports:
+  #     - "10000:10000" # Blob
+  #     - "10001:10001" # Queue
+  #   volumes:
+  #     - azurite_data:/data
+  #   networks:
+  #     - artist-net
+
+  # --- 6. IMAGE PROCESSING (ImgProxy) ---
+  # imgproxy:
+  #   image: darthsim/imgproxy:latest
+  #   container_name: artist_os_imgproxy
+  #   environment:
+  #     IMGPROXY_BIND: ${IMGPROXY_BIND}
+  #     # Local dev security - in prod use keys!
+  #     IMGPROXY_INSECURE_ENDPOINT: ${IMGPROXY_INSECURE_ENDPOINT} 
+  #   ports:
+  #     - "8081:8081"
+  #   networks:
+  #     - artist-net
+
+  # --- 7. BACKEND API (Spring Boot) ---
+  # api:
+  #   build: 
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: artist_os_api
+  #   depends_on:
+  #     - db-relational
+  #     - db-nosql
+  #     - cache
+  #     - iam
+  #     - azure-mock
+  #   environment:
+  #     # Database Connections
+  #     SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+  #     SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+  #     SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+  #     SPRING_DATA_MONGODB_URI: ${SPRING_DATA_MONGODB_URI}
+  #     SPRING_REDIS_HOST: ${SPRING_REDIS_HOST}
+      
+  #     # Security / IAM
+  #     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI}
+      
+  #     # Azure Mock Connection (Standard Azurite Connection String)
+  #     AZURE_STORAGE_CONNECTION_STRING: ${AZURE_STORAGE_CONNECTION_STRING}
+      
+  #     # External Integrations
+  #     STRIPE_API_KEY: ${STRIPE_API_KEY}
+  #   networks:
+  #     - artist-net
+
+  # --- 8. FRONTEND (Next.js) ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: artist_os_frontend
     ports:
-      - "5432:5432"
-
-    volumes:
-      - /home/gabriel/art/db_data:/var/lib/postgresql/data
-
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-  mongo:
-    image: mongo:4.4.6
+      - "3000:3000"
     environment:
-      MONGO_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_USER: ${MONGO_USER}
-      MONGO_DB: ${MONGO_DB}
-    ports:
-      - "27017:27017"
-
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_IAM_URL: ${NEXT_PUBLIC_IAM_URL}
     volumes:
-      - /home/gabriel/art/mongo_data:/data/db
+      - ../frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - artist-net
+
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: artist_os_prometheus
+  #   volumes:
+  #     - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   networks:
+  #     - artist-net
+
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: artist_os_grafana
+  #   ports:
+  #     - "3001:3000"
+  #   depends_on:
+  #     - prometheus
+  #   networks:
+  #     - artist-net
+
+networks:
+  artist-net:
+    driver: bridge
+
+# volumes:
+#   pgdata:
+#   mongodata:
+#   azurite_data:
+#   azurite_data:

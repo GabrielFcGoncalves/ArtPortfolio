@@ -1,0 +1,93 @@
+services:
+
+  iam:
+    build:
+      context: ../keycloak
+      dockerfile: Dockerfile
+    command: start-dev --import-realm 
+    container_name: iam
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_IMPORT: /opt/keycloak/data/import/
+      KC_HTTP_ACCESS_LOG_ENABLED: "true"
+      KC_LOG_CATEGORY_ORG_KEYCLOAK_AUTHORIZATION: DEBUG
+      KC_LOG_LEVEL: DEBUG
+      KC_SPI_USER_PROVIDER_JPA_CASE_SENSITIVE: "true"
+      KC_HTTP_ENABLED: true
+      KC_HOSTNAME: ${KC_HOSTNAME}
+      KC_DB: postgres
+      KC_DB_URL: ${KC_DB_URL}
+      KC_DB_USERNAME: ${KC_DB_USERNAME}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
+      KC_CLIENT_SECRET: ${KC_CLIENT_SECRET}
+      KC_FRONTEND_URL: ${KC_FRONTEND_URL}
+      KC_BACKEND_URL: ${KC_BACKEND_URL}
+      JAVA_OPTS_APPEND: "-Dkeycloak.migration.strategy=IGNORE_EXISTING"
+      KC_DB_POOL_INITIAL_SIZE: 5
+      KC_DB_POOL_MAX_SIZE: 10
+
+    ports:
+      - "8081:8080"
+
+    depends_on:
+      db-relational:
+        condition: service_healthy
+
+    volumes:
+      - artist_keycloak_data:/opt/keycloak/data
+      - ../keycloak/imports:/opt/keycloak/data/import:ro
+
+    networks:
+      - artist-net
+
+
+  db-relational:
+    image: postgres:15-alpine
+    container_name: artist_os_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - artist_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - artist-net
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: artist_os_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_IAM_URL: ${NEXT_PUBLIC_IAM_URL}
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - artist-net
+
+
+
+networks:
+  artist-net:
+    driver: bridge
+
+volumes:
+  artist_keycloak_data:
+  artist_pgdata:
