@@ -1,5 +1,4 @@
 import React from 'react';
-import Sidebar from '@/components/Sidebar';
 import { AppProvider } from '@/providers/AppProvider';
 
 export default function AuthLayout({
@@ -10,8 +9,6 @@ export default function AuthLayout({
   return (
     <AppProvider>
       <div className="flex h-screen bg-neutral-900 text-white font-sans">
-        {/* Sidebar Navigation */}
-        <Sidebar />
 
         {/* Main Content Area (Outlet) */}
         <main className="flex-1 flex flex-col overflow-hidden">
