@@ -3,6 +3,7 @@
 import { ReactKeycloakProvider } from '@react-keycloak/web'
 import keycloak from './keycloak'
 import { useState, useCallback } from 'react'
+import LoadingPage from '@/components/LoadingPage';
 
 const isSecureContext = typeof window !== 'undefined' && (window.isSecureContext || window.location.hostname === 'localhost');
 
@@ -31,6 +32,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
                 authClient={keycloak}
                 initOptions={initOptions}
                 onEvent={onEvent}
+                LoadingComponent={<LoadingPage />}
             >
                 {children}
             </ReactKeycloakProvider>
