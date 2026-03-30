@@ -5,9 +5,11 @@ import Image from 'next/image';
 import { useKeycloak } from '@react-keycloak/web';
 import Navbar from '@/components/navbar/Navbar';
 import DashboardFooter from '@/components/dashboard/DashboardFooter';
+import { useModals } from '@/providers/ModalProvider';
 
 export default function ProfilePage() {
   const { keycloak } = useKeycloak();
+  const { openArtpieceModal } = useModals();
   const user = keycloak.idTokenParsed;
 
   // Use Keycloak info or fallback to defaults
@@ -79,7 +81,10 @@ export default function ProfilePage() {
               <h2 className="text-3xl font-headline font-bold text-on-surface tracking-tighter italic">Your Studio Archives</h2>
               <p className="text-on-surface-variant/60 text-sm mt-2">Curated works previously shared with the community.</p>
             </div>
-            <button className="flex items-center gap-2 bg-tertiary-container text-on-tertiary-container px-6 py-3 rounded-full font-bold text-sm hover:opacity-90 active:scale-95 transition-all shadow-md">
+            <button 
+              onClick={openArtpieceModal}
+              className="flex items-center gap-2 bg-tertiary-container text-on-tertiary-container px-6 py-3 rounded-full font-bold text-sm hover:opacity-90 active:scale-95 transition-all shadow-md"
+            >
               <span className="material-symbols-outlined text-lg">add_circle</span>
               Add New Piece
             </button>

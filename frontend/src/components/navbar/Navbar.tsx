@@ -6,9 +6,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useKeycloak } from '@react-keycloak/web';
 import { AUTH_NAV_LINKS } from './nav-links';
+import { useModals } from '@/providers/ModalProvider';
 
 export default function Navbar() {
   const { keycloak } = useKeycloak();
+  const { openArtpieceModal } = useModals();
   const pathname = usePathname();
 
   const handleLogout = () => {
@@ -55,9 +57,12 @@ export default function Navbar() {
             <span className="material-symbols-outlined text-stone-700 cursor-pointer hover:opacity-80 transition-all">notifications</span>
             <span className="material-symbols-outlined text-stone-700 cursor-pointer hover:opacity-80 transition-all">shopping_bag</span>
             <button onClick={handleLogout} className="material-symbols-outlined text-stone-700 cursor-pointer hover:text-red-500 transition-all">logout</button>
-            <Link href="/me" className="hidden sm:block bg-tertiary-container text-on-tertiary-container px-5 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition-all active:scale-95 duration-150 font-body">
+            <button 
+              onClick={openArtpieceModal}
+              className="hidden sm:block bg-tertiary-container text-on-tertiary-container px-5 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition-all active:scale-95 duration-150 font-body"
+            >
               Create
-            </Link>
+            </button>
             <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-primary/10 relative">
               <Link href="/me" className="hidden sm:block bg-tertiary-container text-on-tertiary-container px-5 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition-all active:scale-95 duration-150 font-body">
               <Image 

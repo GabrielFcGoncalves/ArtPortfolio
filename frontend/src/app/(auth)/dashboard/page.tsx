@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '@/components/navbar/Navbar';
 import DashboardHero from '@/components/dashboard/DashboardHero';
 import FeaturedPieceWithComment from '@/components/dashboard/FeaturedPieceWithComment';
@@ -11,12 +11,16 @@ import CollectionCard from '@/components/dashboard/CollectionCard';
 import MinimalCard from '@/components/dashboard/MinimalCard';
 import NoticeCard from '@/components/dashboard/NoticeCard';
 import DashboardFooter from '@/components/dashboard/DashboardFooter';
+import { useModals } from '@/providers/ModalProvider';
+
 
 /**
  * DashboardPage component for 'The Atelier' (Artist OS).
  * Orchestrates a dense, high-fidelity grid of studio insights and curated works.
  */
 export default function DashboardPage() {
+  const { openArtpieceModal } = useModals();
+
   return (
     <div className="bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container min-h-screen font-body overflow-x-hidden">
       {/* Platform Navigation */}
@@ -34,6 +38,13 @@ export default function DashboardPage() {
               <p className="text-on-surface-variant/80 mt-6 font-body text-base leading-relaxed">An organic selection of recent works currently residing in the studio archives. Each piece is hand-curated and authenticated by the atelier.</p>
             </div>
             <div className="flex gap-4 self-center md:self-end">
+              <button 
+                onClick={openArtpieceModal}
+                className="flex items-center gap-3 px-8 py-3.5 bg-primary text-on-primary rounded-full hover:opacity-90 transition-all hover:scale-105 active:scale-95 group font-bold text-sm tracking-tight shadow-md"
+              >
+                Add New Piece
+                <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform text-white">add</span>
+              </button>
               <button className="flex items-center gap-3 px-8 py-3.5 border border-outline-variant/30 rounded-full hover:bg-surface-container-low transition-all hover:scale-105 active:scale-95 group font-bold text-sm tracking-tight text-on-surface">
                 Filter Archives
                 <span className="material-symbols-outlined text-xl group-hover:rotate-180 transition-transform">tune</span>
@@ -115,6 +126,7 @@ export default function DashboardPage() {
 
       {/* Boutique Footer */}
       <DashboardFooter />
+
     </div>
   );
 }
