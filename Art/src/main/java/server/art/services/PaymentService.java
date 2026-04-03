@@ -7,6 +7,8 @@ import server.art.data.Commission;
 import server.art.data.Dispute;
 import server.art.data.Payment;
 import server.art.data.User;
+import server.art.data.dto.payment.*;
+import server.art.data.dto.common.*;
 import server.art.data.enums.CommissionStatus;
 import server.art.data.enums.EscrowStatus;
 import server.art.exceptions.BusinessLogicException;
@@ -30,12 +32,8 @@ public class PaymentService {
     private final UserRepository userRepository;
     private final IdentityService identityService;
 
-    /**
-     * Create a Stripe Checkout session for the commission.
-     * TODO: Integrate real Stripe SDK when keys are configured.
-     */
     @Transactional
-    public Map<String, Object> createPaymentSession(UUID commissionId) {
+    public PaymentSessionResponseDTO createPaymentSession(UUID commissionId) {
         User user = getCurrentUser();
         Commission commission = commissionRepository.findById(commissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Commission not found: " + commissionId));
@@ -48,7 +46,6 @@ public class PaymentService {
             throw new BusinessLogicException("Commission must be in REQUESTED status to create payment");
         }
 
-        // Stub: In production, this would call Stripe.checkout.sessions.create()
         String stubSessionId = "cs_stub_" + UUID.randomUUID();
         String stubCheckoutUrl = "https://checkout.stripe.com/pay/" + stubSessionId;
 
@@ -56,25 +53,20 @@ public class PaymentService {
                 .commission(commission)
                 .amountCents(commission.getTotalPriceCents())
                 .stripeSessionId(stubSessionId)
+                .status("PENDING")
                 .build();
         paymentRepository.save(payment);
 
-        return Map.of(
-                "session_id", stubSessionId,
-                "checkout_url", stubCheckoutUrl
-        );
+        return PaymentSessionResponseDTO.builder()
+                .sessionId(stubSessionId)
+                .checkoutUrl(stubCheckoutUrl)
+                .build();
     }
 
-    /**
-     * Handle Stripe webhook events.
-     * TODO: Add real Stripe signature validation.
-     */
     @Transactional
     public void handleWebhookEvent(String eventType, Map<String, Object> eventData) {
         switch (eventType) {
             case "checkout.session.completed" -> handleCheckoutCompleted(eventData);
-            case "charge.refunded" -> handleChargeRefunded(eventData);
-            case "charge.dispute.created" -> handleDisputeCreated(eventData);
             default -> { /* ignore unknown events */ }
         }
     }
@@ -95,29 +87,21 @@ public class PaymentService {
         commissionRepository.save(commission);
     }
 
-    private void handleChargeRefunded(Map<String, Object> eventData) {
-        // Stub implementation
-    }
-
-    private void handleDisputeCreated(Map<String, Object> eventData) {
-        // Stub implementation
-    }
-
-    public Map<String, Object> getPaymentStatus(UUID commissionId) {
+    public PaymentStatusResponseDTO getPaymentStatus(UUID commissionId) {
         Payment payment = paymentRepository.findByCommissionId(commissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("No payment found for commission: " + commissionId));
 
-        return Map.of(
-                "status", payment.getStatus(),
-                "amount_cents", payment.getAmountCents(),
-                "stripe_payment_id", payment.getStripePaymentId() != null ? payment.getStripePaymentId() : "",
-                "created_at", payment.getCreatedAt().toString(),
-                "completed_at", payment.getCompletedAt() != null ? payment.getCompletedAt().toString() : ""
-        );
+        return PaymentStatusResponseDTO.builder()
+                .status(payment.getStatus())
+                .amountCents(payment.getAmountCents())
+                .stripePaymentId(payment.getStripePaymentId() != null ? payment.getStripePaymentId() : "")
+                .createdAt(payment.getCreatedAt().toString())
+                .completedAt(payment.getCompletedAt() != null ? payment.getCompletedAt().toString() : "")
+                .build();
     }
 
     @Transactional
-    public Map<String, Object> requestRefund(UUID commissionId, String reason) {
+    public SimpleMessageResponseDTO requestRefund(UUID commissionId, RefundRequestDTO request) {
         User user = getCurrentUser();
         Commission commission = commissionRepository.findById(commissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Commission not found: " + commissionId));
@@ -133,11 +117,15 @@ public class PaymentService {
         Dispute dispute = Dispute.builder()
                 .commission(commission)
                 .initiatedById(user.getId())
-                .reason(reason)
+                .reason(request.getReason())
+                .status("OPEN")
                 .build();
         disputeRepository.save(dispute);
 
-        return Map.of("success", true, "message", "Refund requested");
+        return SimpleMessageResponseDTO.builder()
+                .success(true)
+                .message("Refund requested")
+                .build();
     }
 
     private User getCurrentUser() {

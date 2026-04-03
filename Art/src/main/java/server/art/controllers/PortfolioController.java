@@ -11,10 +11,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import server.art.data.dto.portfolio.*;
+import server.art.data.dto.common.*;
 import server.art.dto.PaginatedResponse;
 import server.art.services.PortfolioService;
 
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -24,7 +25,7 @@ public class PortfolioController {
     private final PortfolioService portfolioService;
 
     @GetMapping("/api/users/{userId}/portfolio")
-    public ResponseEntity<PaginatedResponse<Map<String, Object>>> getPortfolio(
+    public ResponseEntity<PaginatedResponse<ArtPieceResponseDTO>> getPortfolio(
             @PathVariable UUID userId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int limit) {
@@ -32,29 +33,20 @@ public class PortfolioController {
     }
 
     @PostMapping("/api/users/me/portfolio")
-    public ResponseEntity<Map<String, Object>> createPiece(@RequestBody Map<String, Object> body) {
-        String title = (String) body.get("title");
-        String description = (String) body.get("description");
-        String tags = (String) body.get("tags");
-        UUID commissionId = body.containsKey("commission_id") ? UUID.fromString((String) body.get("commission_id")) : null;
-        boolean isPublished = body.containsKey("is_published") ? (Boolean) body.get("is_published") : true;
-
+    public ResponseEntity<ArtPieceResponseDTO> createPiece(@RequestBody ArtPieceCreateRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(portfolioService.createPiece(title, description, tags, commissionId, isPublished));
+                .body(portfolioService.createPiece(request));
     }
 
     @PatchMapping("/api/users/me/portfolio/{pieceId}")
-    public ResponseEntity<Map<String, Object>> updatePiece(@PathVariable UUID pieceId, @RequestBody Map<String, Object> body) {
-        String title = (String) body.get("title");
-        String description = (String) body.get("description");
-        Boolean isPublished = body.containsKey("is_published") ? (Boolean) body.get("is_published") : null;
-        String tags = (String) body.get("tags");
-
-        return ResponseEntity.ok(portfolioService.updatePiece(pieceId, title, description, isPublished, tags));
+    public ResponseEntity<SimpleMessageResponseDTO> updatePiece(
+            @PathVariable UUID pieceId, 
+            @RequestBody ArtPieceUpdateRequestDTO request) {
+        return ResponseEntity.ok(portfolioService.updatePiece(pieceId, request));
     }
 
     @DeleteMapping("/api/users/me/portfolio/{pieceId}")
-    public ResponseEntity<Map<String, Object>> deletePiece(@PathVariable UUID pieceId) {
+    public ResponseEntity<SimpleMessageResponseDTO> deletePiece(@PathVariable UUID pieceId) {
         return ResponseEntity.ok(portfolioService.deletePiece(pieceId));
     }
 }

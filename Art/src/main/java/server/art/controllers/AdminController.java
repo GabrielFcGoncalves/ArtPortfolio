@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import server.art.data.dto.admin.*;
+import server.art.data.dto.user.*;
+import server.art.data.dto.common.*;
 import server.art.dto.PaginatedResponse;
 import server.art.services.AdminService;
 
@@ -24,32 +27,32 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    @GetMapping("/dashboard")
-    public ResponseEntity<Map<String, Object>> getDashboard() {
+    @GetMapping("/stats")
+    public ResponseEntity<DashboardStatsDTO> getDashboardStats() {
         return ResponseEntity.ok(adminService.getDashboardStats());
     }
 
     @GetMapping("/users")
-    public ResponseEntity<PaginatedResponse<Map<String, Object>>> listUsers(
+    public ResponseEntity<PaginatedResponse<UserResponseDTO>> listUsers(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "50") int limit) {
+            @RequestParam(defaultValue = "20") int limit) {
         return ResponseEntity.ok(adminService.listUsers(page, limit));
     }
 
-    @PostMapping("/users/{id}/verify")
-    public ResponseEntity<Map<String, Object>> verifyArtist(@PathVariable UUID id) {
-        return ResponseEntity.ok(adminService.verifyArtist(id));
+    @PostMapping("/users/{userId}/verify")
+    public ResponseEntity<UserResponseDTO> verifyArtist(@PathVariable UUID userId) {
+        return ResponseEntity.ok(adminService.verifyArtist(userId));
     }
 
-    @PostMapping("/users/{id}/suspend")
-    public ResponseEntity<Map<String, Object>> suspendUser(
-            @PathVariable UUID id,
+    @PostMapping("/users/{userId}/suspend")
+    public ResponseEntity<SimpleMessageResponseDTO> suspendUser(
+            @PathVariable UUID userId,
             @RequestBody Map<String, String> body) {
-        return ResponseEntity.ok(adminService.suspendUser(id, body.get("reason")));
+        return ResponseEntity.ok(adminService.suspendUser(userId, body.get("reason")));
     }
 
     @GetMapping("/disputes")
-    public ResponseEntity<PaginatedResponse<Map<String, Object>>> listDisputes(
+    public ResponseEntity<PaginatedResponse<DisputeResponseDTO>> listDisputes(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(defaultValue = "all") String status) {
@@ -57,7 +60,7 @@ public class AdminController {
     }
 
     @PostMapping("/disputes/{id}/resolve")
-    public ResponseEntity<Map<String, Object>> resolveDispute(
+    public ResponseEntity<SimpleMessageResponseDTO> resolveDispute(
             @PathVariable UUID id,
             @RequestBody Map<String, String> body) {
         return ResponseEntity.ok(adminService.resolveDispute(id, body.get("resolution"), body.get("resolution_type")));

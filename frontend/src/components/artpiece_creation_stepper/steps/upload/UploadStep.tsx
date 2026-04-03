@@ -1,19 +1,11 @@
 import React from 'react';
-import { ArtpieceFormState, ArtpieceFormErrors } from '../../ArtpieceCreationModal';
 import { FileDropzone } from './FileDropzone';
 
 interface Props {
-  formData: ArtpieceFormState;
-  errors: ArtpieceFormErrors;
-  onUpdate: <K extends keyof ArtpieceFormState>(field: K, value: ArtpieceFormState[K]) => void;
+  errors: any;
 }
 
-export default function UploadStep({ formData, errors, onUpdate }: Props) {
-  const handleSimulatedUpload = () => {
-    const mockFile = new File([''], 'The Struggle.png', { type: 'image/png' });
-    onUpdate('file', mockFile);
-  };
-
+export default function UploadStep({ errors }: Props) {
   return (
     <div className="space-y-10 p-6">
       <div className="space-y-1">
@@ -21,11 +13,8 @@ export default function UploadStep({ formData, errors, onUpdate }: Props) {
         <p className="text-on-surface-variant text-sm">Select the high-resolution file for this piece.</p>
       </div>
 
-      <FileDropzone 
-        file={formData.file} 
-        error={errors.file} 
-        onUpload={handleSimulatedUpload} 
-      />
+      <FileDropzone />
+      {errors.file && <p className="text-error text-xs font-bold mt-2 ml-4">{errors.file}</p>}
     </div>
   );
 }

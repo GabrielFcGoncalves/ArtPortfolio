@@ -25,4 +25,7 @@ public interface CommissionRepository extends JpaRepository<Commission, UUID> {
     long countByStatus(CommissionStatus status);
 
     long countByArtistId(UUID artistId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT SUM(c.totalPriceCents) FROM Commission c WHERE c.status = 'COMPLETED'")
+    java.util.Optional<Long> sumAllRevenue();
 }

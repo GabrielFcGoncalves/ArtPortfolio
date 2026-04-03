@@ -1,12 +1,9 @@
 import React from 'react';
+import { useArtpieceForm } from '@/lib/context/ArtpieceContext';
 
-interface SecurityTogglesProps {
-  disableRightClick: boolean;
-  noAI: boolean;
-  onUpdate: (field: 'disableRightClick' | 'noAI', value: boolean) => void;
-}
+export function SecurityToggles() {
+  const { formData, updateField } = useArtpieceForm();
 
-export function SecurityToggles({ disableRightClick, noAI, onUpdate }: SecurityTogglesProps) {
   return (
     <section>
       <div className="flex items-center gap-3 mb-6">
@@ -25,8 +22,8 @@ export function SecurityToggles({ disableRightClick, noAI, onUpdate }: SecurityT
             <input 
               type="checkbox" 
               className="sr-only peer" 
-              checked={disableRightClick}
-              onChange={(e) => onUpdate('disableRightClick', e.target.checked)}
+              checked={formData.protection.disableRightClick}
+              onChange={(e) => updateField('protection.disableRightClick', e.target.checked)}
             />
             <div className="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
           </label>
@@ -45,8 +42,8 @@ export function SecurityToggles({ disableRightClick, noAI, onUpdate }: SecurityT
             <input 
               type="checkbox" 
               className="sr-only peer" 
-              checked={noAI}
-              onChange={(e) => onUpdate('noAI', e.target.checked)}
+              checked={formData.protection.noAI}
+              onChange={(e) => updateField('protection.noAI', e.target.checked)}
             />
             <div className="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
           </label>

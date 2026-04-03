@@ -1,13 +1,13 @@
 import React from 'react';
+import { useArtpieceForm } from '@/lib/context/ArtpieceContext';
 
 interface BasicInfoProps {
-  title: string;
-  story: string;
   errors: { title?: string; story?: string };
-  onUpdate: (field: 'title' | 'story', value: string) => void;
 }
 
-export function BasicInfo({ title, story, errors, onUpdate }: BasicInfoProps) {
+export function BasicInfo({ errors }: BasicInfoProps) {
+  const { formData, updateField } = useArtpieceForm();
+
   return (
     <>
       {/* Field: Title */}
@@ -16,8 +16,8 @@ export function BasicInfo({ title, story, errors, onUpdate }: BasicInfoProps) {
         <input 
           id="piece-title"
           type="text"
-          value={title}
-          onChange={(e) => onUpdate('title', e.target.value)}
+          value={formData.metadata.title}
+          onChange={(e) => updateField('metadata.title', e.target.value)}
           placeholder="e.g., Whispers of the High Desert"
           className={`w-full bg-surface-container-low border-0 border-b-2 ${errors.title ? 'border-error' : 'border-transparent focus:border-primary'} focus:ring-0 px-4 py-3 text-on-surface font-body transition-all placeholder:text-outline-variant`}
         />
@@ -31,8 +31,8 @@ export function BasicInfo({ title, story, errors, onUpdate }: BasicInfoProps) {
         <textarea 
           id="piece-story"
           rows={5}
-          value={story}
-          onChange={(e) => onUpdate('story', e.target.value)}
+          value={formData.metadata.description}
+          onChange={(e) => updateField('metadata.description', e.target.value)}
           placeholder="It began with the way the morning light hit the terracotta tiles..."
           className={`w-full bg-surface-container-low border-0 border-b-2 ${errors.story ? 'border-error' : 'border-transparent focus:border-primary'} focus:ring-0 px-4 py-3 text-on-surface font-body transition-all placeholder:text-outline-variant resize-none`}
         />

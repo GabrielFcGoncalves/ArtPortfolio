@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import server.art.data.Commission;
 import server.art.data.Message;
 import server.art.data.User;
+import server.art.data.dto.message.*;
+import server.art.data.dto.common.*;
 import server.art.dto.PaginatedResponse;
 import server.art.exceptions.BusinessLogicException;
 import server.art.exceptions.ResourceNotFoundException;
@@ -15,7 +17,6 @@ import server.art.repositories.MessageRepository;
 import server.art.repositories.UserRepository;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -27,10 +28,11 @@ public class MessageService {
     private final UserRepository userRepository;
     private final IdentityService identityService;
 
-    public Map<String, Object> sendMessage(UUID commissionId, String content) {
+    public MessageResponseDTO sendMessage(UUID commissionId, MessageCreateRequestDTO request) {
         User user = getCurrentUser();
         verifyParticipant(commissionId, user);
 
+        String content = request.getContent();
         if (content == null || content.isBlank()) {
             throw new BusinessLogicException("Message content cannot be empty");
         }
@@ -45,24 +47,24 @@ public class MessageService {
 
         Message saved = messageRepository.save(message);
 
-        return Map.of("message", mapMessage(saved));
+        return mapToDTO(saved);
     }
 
-    public PaginatedResponse<Map<String, Object>> getMessages(UUID commissionId, int page, int limit) {
+    public PaginatedResponse<MessageResponseDTO> getMessages(UUID commissionId, int page, int limit) {
         User user = getCurrentUser();
         verifyParticipant(commissionId, user);
 
         PageRequest pageRequest = PageRequest.of(page - 1, limit);
         Page<Message> messagesPage = messageRepository.findByCommissionIdOrderByCreatedAtDesc(commissionId, pageRequest);
 
-        List<Map<String, Object>> data = messagesPage.getContent().stream()
-                .map(this::mapMessage)
+        List<MessageResponseDTO> data = messagesPage.getContent().stream()
+                .map(this::mapToDTO)
                 .toList();
 
         return PaginatedResponse.of(data, messagesPage.getTotalElements(), page, limit);
     }
 
-    public Map<String, Object> deleteMessage(UUID commissionId, String messageId) {
+    public SimpleMessageResponseDTO deleteMessage(UUID commissionId, String messageId) {
         User user = getCurrentUser();
 
         Message message = messageRepository.findById(messageId)
@@ -75,10 +77,11 @@ public class MessageService {
         message.setDeleted(true);
         messageRepository.save(message);
 
-        return Map.of("success", true, "message", "Message deleted");
+        return SimpleMessageResponseDTO.builder()
+                .success(true)
+                .message("Message deleted")
+                .build();
     }
-
-    // --- Helpers ---
 
     private User getCurrentUser() {
         String keycloakId = identityService.getCurrentUserSub();
@@ -95,23 +98,23 @@ public class MessageService {
         }
     }
 
-    private Map<String, Object> mapMessage(Message m) {
+    private MessageResponseDTO mapToDTO(Message m) {
         if (m.isDeleted()) {
-            return Map.of(
-                    "id", m.getId(),
-                    "content", "[deleted]",
-                    "created_at", m.getCreatedAt().toString()
-            );
+            return MessageResponseDTO.builder()
+                    .id(m.getId())
+                    .content("[deleted]")
+                    .createdAt(m.getCreatedAt().toString())
+                    .build();
         }
-        return Map.of(
-                "id", m.getId(),
-                "sender", Map.of(
-                        "id", m.getSenderId(),
-                        "username", m.getSenderUsername() != null ? m.getSenderUsername() : "",
-                        "avatar_url", m.getSenderAvatarUrl() != null ? m.getSenderAvatarUrl() : ""
-                ),
-                "content", m.getContent(),
-                "created_at", m.getCreatedAt().toString()
-        );
+        return MessageResponseDTO.builder()
+                .id(m.getId())
+                .sender(MessageSenderDTO.builder()
+                        .id(m.getSenderId())
+                        .username(m.getSenderUsername() != null ? m.getSenderUsername() : "")
+                        .avatarUrl(m.getSenderAvatarUrl() != null ? m.getSenderAvatarUrl() : "")
+                        .build())
+                .content(m.getContent())
+                .createdAt(m.getCreatedAt().toString())
+                .build();
     }
 }

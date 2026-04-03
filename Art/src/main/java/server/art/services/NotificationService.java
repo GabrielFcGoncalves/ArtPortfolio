@@ -3,10 +3,13 @@ package server.art.services;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import server.art.data.Notification;
 import server.art.data.User;
+import server.art.data.dto.notification.*;
+import server.art.data.dto.common.*;
 import server.art.data.enums.NotificationType;
 import server.art.dto.PaginatedResponse;
 import server.art.exceptions.BusinessLogicException;
@@ -15,7 +18,6 @@ import server.art.repositories.NotificationRepository;
 import server.art.repositories.UserRepository;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -26,9 +28,9 @@ public class NotificationService {
     private final UserRepository userRepository;
     private final IdentityService identityService;
 
-    public PaginatedResponse<Map<String, Object>> getNotifications(int page, int limit, boolean unreadOnly) {
+    public PaginatedResponse<NotificationResponseDTO> getNotifications(int page, int limit, boolean unreadOnly) {
         User user = getCurrentUser();
-        PageRequest pageRequest = PageRequest.of(page - 1, limit);
+        PageRequest pageRequest = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
 
         Page<Notification> notifPage;
         if (unreadOnly) {
@@ -39,16 +41,11 @@ public class NotificationService {
                     .findByUserIdOrderByCreatedAtDesc(user.getId(), pageRequest);
         }
 
-        long unreadCount = notificationRepository.countByUserIdAndIsReadFalse(user.getId());
-
-        List<Map<String, Object>> data = notifPage.getContent().stream()
-                .map(this::mapNotification)
+        List<NotificationResponseDTO> data = notifPage.getContent().stream()
+                .map(this::mapToDTO)
                 .toList();
 
-        PaginatedResponse<Map<String, Object>> response = PaginatedResponse.of(
-                data, notifPage.getTotalElements(), page, limit);
-
-        return response;
+        return PaginatedResponse.of(data, notifPage.getTotalElements(), page, limit);
     }
 
     public long getUnreadCount() {
@@ -57,7 +54,7 @@ public class NotificationService {
     }
 
     @Transactional
-    public Map<String, Object> markAsRead(UUID notificationId) {
+    public NotificationResponseDTO markAsRead(UUID notificationId) {
         User user = getCurrentUser();
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Notification not found: " + notificationId));
@@ -67,16 +64,19 @@ public class NotificationService {
         }
 
         notification.setRead(true);
-        notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
 
-        return Map.of("success", true);
+        return mapToDTO(saved);
     }
 
     @Transactional
-    public Map<String, Object> markAllAsRead() {
+    public SimpleMessageResponseDTO markAllAsRead() {
         User user = getCurrentUser();
         int count = notificationRepository.markAllAsRead(user.getId());
-        return Map.of("success", true, "updated", count);
+        return SimpleMessageResponseDTO.builder()
+                .success(true)
+                .message("Marked " + count + " notifications as read")
+                .build();
     }
 
     /**
@@ -101,20 +101,16 @@ public class NotificationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Current user not found"));
     }
 
-    private Map<String, Object> mapNotification(Notification n) {
-        Map<String, Object> map = new java.util.HashMap<>();
-        map.put("id", n.getId());
-        map.put("type", n.getType().name());
-        map.put("title", n.getTitle());
-        map.put("message", n.getMessage() != null ? n.getMessage() : "");
-        map.put("is_read", n.isRead());
-        map.put("created_at", n.getCreatedAt().toString());
-        if (n.getRelatedCommissionId() != null) {
-            map.put("related_commission_id", n.getRelatedCommissionId());
-        }
-        if (n.getRelatedUserId() != null) {
-            map.put("related_user_id", n.getRelatedUserId());
-        }
-        return map;
+    private NotificationResponseDTO mapToDTO(Notification n) {
+        return NotificationResponseDTO.builder()
+                .id(n.getId())
+                .type(n.getType())
+                .title(n.getTitle())
+                .message(n.getMessage())
+                .relatedCommissionId(n.getRelatedCommissionId())
+                .relatedUserId(n.getRelatedUserId())
+                .isRead(n.isRead())
+                .createdAt(n.getCreatedAt().toString())
+                .build();
     }
 }

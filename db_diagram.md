@@ -111,30 +111,79 @@ created_at timestamp
 }
 
 // --- PORTFOLIO & STOREFRONT ---
+/*
+SQL IMPLEMENTATION:
+CREATE TABLE art_pieces (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  tags VARCHAR(255),
+  is_for_sale BOOLEAN DEFAULT FALSE,
+  price DECIMAL(10,2),
+  currency VARCHAR(3) DEFAULT 'EUR',
+  status VARCHAR(50) DEFAULT 'public',
+  is_published BOOLEAN DEFAULT TRUE,
+  commission_id UUID,
+  asset_count INT DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP
+);
+
+CREATE TABLE art_piece_assets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  art_piece_id UUID NOT NULL REFERENCES art_pieces(id) ON DELETE CASCADE,
+  blob_path VARCHAR(2048) NOT NULL,
+  blob_url VARCHAR(2048) NOT NULL,
+  file_size_bytes BIGINT NOT NULL,
+  file_type VARCHAR(50) NOT NULL,
+  sequence_order INT NOT NULL DEFAULT 0,
+  image_title VARCHAR(255),
+  image_description TEXT,
+  is_deleted BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP,
+  
+  -- Ensure order is unique per art piece (no two images with same order)
+  UNIQUE(art_piece_id, sequence_order)
+);
+
+-- Index for fast queries
+CREATE INDEX idx_art_piece_assets_art_piece_id ON art_piece_assets(art_piece_id);
+*/
+
 Table art_pieces {
-id integer [primary key]
-user_id integer [ref: > users.id]
-title varchar
-description text
-
-// Logic for the Store
-is_for_sale boolean [default: false]
-price decimal [note: 'Price for the high-res digital download']
-currency varchar [default: 'EUR']
-
-status varchar // 'public', 'private', 'sold_out'
-created_at timestamp
+  id uuid [primary key, default: `gen_random_uuid()`]
+  user_id uuid [ref: > users.id]
+  title varchar(255) [not null]
+  description text
+  tags varchar(255)
+  is_for_sale boolean [default: false]
+  price decimal(10,2)
+  currency varchar(3) [default: 'EUR']
+  status varchar(50) [default: 'public']
+  is_published boolean [default: true]
+  commission_id uuid
+  asset_count int [default: 0]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
 }
 
-Table images {
-id integer [primary key]
-art_piece_id integer [ref: > art_pieces.id]
+Table art_piece_assets {
+  id uuid [primary key, default: `gen_random_uuid()`]
+  art_piece_id uuid [ref: > art_pieces.id]
+  blob_path varchar(2048) [not null]
+  blob_url varchar(2048) [not null]
+  file_size_bytes bigint [not null]
+  file_type varchar(50) [not null]
+  sequence_order int [not null, default: 0]
+  image_title varchar(255)
+  image_description text
+  is_deleted boolean [default: false]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp
 
-// Distinguish between what the public sees vs what the buyer gets
-file_type varchar // 'thumbnail', 'watermarked_preview', 'original_high_res'
-storage_key varchar // path in Azure/S3
-width integer
-height integer
+  Note: 'Ensure order is unique per art piece (no two images with same order)'
 }
 
 // --- SALES TRACKING ---

@@ -3,13 +3,8 @@ package server.art.controllers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import server.art.data.dto.milestone.*;
 import server.art.services.MilestoneService;
 
 import java.util.List;
@@ -24,13 +19,13 @@ public class MilestoneController {
     private final MilestoneService milestoneService;
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getMilestones(@PathVariable UUID commissionId) {
-        List<Map<String, Object>> milestones = milestoneService.getMilestones(commissionId);
+    public ResponseEntity<Map<String, List<MilestoneResponseDTO>>> getMilestones(@PathVariable UUID commissionId) {
+        List<MilestoneResponseDTO> milestones = milestoneService.getMilestones(commissionId);
         return ResponseEntity.ok(Map.of("milestones", milestones));
     }
 
     @PostMapping("/{id}/submit")
-    public ResponseEntity<Map<String, Object>> submitMilestone(
+    public ResponseEntity<MilestoneResponseDTO> submitMilestone(
             @PathVariable UUID commissionId,
             @PathVariable UUID id,
             @RequestBody(required = false) Map<String, String> body) {
@@ -39,14 +34,14 @@ public class MilestoneController {
     }
 
     @PostMapping("/{id}/approve")
-    public ResponseEntity<Map<String, Object>> approveMilestone(
+    public ResponseEntity<MilestoneResponseDTO> approveMilestone(
             @PathVariable UUID commissionId,
             @PathVariable UUID id) {
         return ResponseEntity.ok(milestoneService.approveMilestone(commissionId, id));
     }
 
     @PostMapping("/{id}/request-revision")
-    public ResponseEntity<Map<String, Object>> requestRevision(
+    public ResponseEntity<RevisionRequestResponseDTO> requestRevision(
             @PathVariable UUID commissionId,
             @PathVariable UUID id,
             @RequestBody Map<String, String> body) {
@@ -56,7 +51,7 @@ public class MilestoneController {
     }
 
     @PatchMapping("/{id}/assets/{assetId}")
-    public ResponseEntity<Map<String, Object>> updateAsset(
+    public ResponseEntity<AssetResponseDTO> updateAsset(
             @PathVariable UUID commissionId,
             @PathVariable UUID id,
             @PathVariable UUID assetId,

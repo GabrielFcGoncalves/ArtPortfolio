@@ -1,37 +1,34 @@
 import React from 'react';
-import { ArtpieceFormState, ArtpieceFormErrors } from '../../ArtpieceCreationModal';
 import { BasicInfo } from './BasicInfo';
 import { CategoryInput } from './CategoryInput';
 import { CurationTip } from './CurationTip';
+import { useArtpieceForm } from '@/lib/context/ArtpieceContext';
 
 interface Props {
-  formData: ArtpieceFormState;
-  errors: ArtpieceFormErrors;
-  onUpdate: <K extends keyof ArtpieceFormState>(field: K, value: ArtpieceFormState[K]) => void;
+  errors: any;
 }
 
-export default function MetadataStep({ formData, errors, onUpdate }: Props) {
+export default function MetadataStep({ errors }: Props) {
+  const { formData, updateField } = useArtpieceForm();
+
   const handleAddCategory = (category: string) => {
-    if (!formData.categories.includes(category)) {
-      onUpdate('categories', [...formData.categories, category]);
+    if (!formData.metadata.tags.includes(category)) {
+      updateField('metadata.tags', [...formData.metadata.tags, category]);
     }
   };
 
   const handleRemoveCategory = (category: string) => {
-    onUpdate('categories', formData.categories.filter(c => c !== category));
+    updateField('metadata.tags', formData.metadata.tags.filter(c => c !== category));
   };
 
   return (
     <div className="space-y-8 p-6">
       <BasicInfo 
-        title={formData.title} 
-        story={formData.story} 
         errors={errors} 
-        onUpdate={onUpdate} 
       />
 
       <CategoryInput 
-        categories={formData.categories} 
+        categories={formData.metadata.tags} 
         onAdd={handleAddCategory} 
         onRemove={handleRemoveCategory} 
       />

@@ -1,13 +1,10 @@
 import React from 'react';
+import { useArtpieceForm } from '@/lib/context/ArtpieceContext';
 
-interface WatermarkControlsProps {
-  applyWatermark: boolean;
-  watermarkStyle: 'center' | 'tiled';
-  watermarkOpacity: number;
-  onUpdate: <K extends 'applyWatermark' | 'watermarkStyle' | 'watermarkOpacity'>(field: K, value: any) => void;
-}
+export function WatermarkControls() {
+  const { formData, updateField } = useArtpieceForm();
+  const { applyWatermark, watermarkStyle, watermarkOpacity } = formData.protection;
 
-export function WatermarkControls({ applyWatermark, watermarkStyle, watermarkOpacity, onUpdate }: WatermarkControlsProps) {
   return (
     <section>
       <div className="flex items-center gap-3 mb-6">
@@ -22,7 +19,7 @@ export function WatermarkControls({ applyWatermark, watermarkStyle, watermarkOpa
               type="checkbox" 
               className="sr-only peer" 
               checked={applyWatermark}
-              onChange={(e) => onUpdate('applyWatermark', e.target.checked)}
+              onChange={(e) => updateField('protection.applyWatermark', e.target.checked)}
             />
             <div className="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
           </label>
@@ -32,14 +29,14 @@ export function WatermarkControls({ applyWatermark, watermarkStyle, watermarkOpa
           <>
             <div className="grid grid-cols-2 gap-4">
               <button 
-                onClick={() => onUpdate('watermarkStyle', 'center')}
+                onClick={() => updateField('protection.watermarkStyle', 'center')}
                 className={`flex flex-col items-center gap-3 p-4 border rounded-xl transition-all ${watermarkStyle === 'center' ? 'border-primary bg-surface-container-lowest shadow-sm' : 'border-outline-variant/30 bg-surface-container-low hover:bg-surface-container-lowest'}`}
               >
                 <span className={`material-symbols-outlined scale-125 ${watermarkStyle === 'center' ? 'text-primary' : 'text-on-surface-variant'}`} style={{ fontVariationSettings: "'FILL' 0" }}>center_focus_weak</span>
                 <span className={`text-xs font-bold uppercase tracking-widest ${watermarkStyle === 'center' ? 'text-primary' : 'text-on-surface-variant'}`}>Center Logo</span>
               </button>
               <button 
-                onClick={() => onUpdate('watermarkStyle', 'tiled')}
+                onClick={() => updateField('protection.watermarkStyle', 'tiled')}
                 className={`flex flex-col items-center gap-3 p-4 border rounded-xl transition-all ${watermarkStyle === 'tiled' ? 'border-primary bg-surface-container-lowest shadow-sm' : 'border-outline-variant/30 bg-surface-container-low hover:bg-surface-container-lowest'}`}
               >
                 <span className={`material-symbols-outlined scale-125 ${watermarkStyle === 'tiled' ? 'text-primary' : 'text-on-surface-variant'}`} style={{ fontVariationSettings: "'FILL' 0" }}>grid_view</span>
@@ -54,7 +51,7 @@ export function WatermarkControls({ applyWatermark, watermarkStyle, watermarkOpa
                 min="0" 
                 max="100" 
                 value={watermarkOpacity}
-                onChange={(e) => onUpdate('watermarkOpacity', parseInt(e.target.value))}
+                onChange={(e) => updateField('protection.watermarkOpacity', parseInt(e.target.value))}
                 className="w-full h-1.5 bg-surface-container-highest accent-primary appearance-none cursor-pointer rounded-full" 
               />
               <div className="flex justify-between text-[10px] font-medium text-on-surface-variant">

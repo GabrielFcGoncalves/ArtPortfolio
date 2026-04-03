@@ -6,19 +6,20 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import server.art.data.dto.portfolio.*;
+import server.art.data.dto.common.*;
 import server.art.data.ArtPiece;
-import server.art.data.PortfolioAsset;
+import server.art.data.ArtPieceAsset;
 import server.art.data.User;
 import server.art.dto.PaginatedResponse;
 import server.art.exceptions.BusinessLogicException;
 import server.art.exceptions.ResourceNotFoundException;
+import server.art.repositories.ArtPieceAssetRepository;
 import server.art.repositories.ArtPieceRepository;
-import server.art.repositories.PortfolioAssetRepository;
 import server.art.repositories.UserRepository;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -26,34 +27,35 @@ import java.util.UUID;
 public class PortfolioService {
 
     private final ArtPieceRepository artPieceRepository;
-    private final PortfolioAssetRepository portfolioAssetRepository;
+    private final ArtPieceAssetRepository artPieceAssetRepository;
     private final UserRepository userRepository;
     private final IdentityService identityService;
 
-    public PaginatedResponse<Map<String, Object>> getPortfolio(UUID userId, int page, int limit) {
+    public PaginatedResponse<ArtPieceResponseDTO> getPortfolio(UUID userId, int page, int limit) {
         PageRequest pageRequest = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
         Page<ArtPiece> piecesPage = artPieceRepository.findByUserIdAndIsPublishedTrue(userId, pageRequest);
 
-        List<Map<String, Object>> data = piecesPage.getContent().stream()
+        List<ArtPieceResponseDTO> data = piecesPage.getContent().stream()
                 .map(piece -> {
-                    List<PortfolioAsset> assets = portfolioAssetRepository
+                    List<ArtPieceAsset> assets = artPieceAssetRepository
                             .findByArtPieceIdOrderBySequenceOrderAsc(piece.getId());
-                    List<Map<String, Object>> assetMaps = assets.stream()
-                            .map(a -> Map.<String, Object>of(
-                                    "id", a.getId(),
-                                    "blob_url", a.getBlobUrl() != null ? a.getBlobUrl() : "",
-                                    "sequence_order", a.getSequenceOrder()
-                            ))
+                    List<ArtPieceAssetResponseDTO> assetDTOs = assets.stream()
+                            .map(a -> ArtPieceAssetResponseDTO.builder()
+                                    .id(a.getId())
+                                    .blobUrl(a.getBlobUrl() != null ? a.getBlobUrl() : "")
+                                    .sequenceOrder(a.getSequenceOrder())
+                                    .build())
                             .toList();
-                    return Map.<String, Object>of(
-                            "id", piece.getId(),
-                            "title", piece.getTitle(),
-                            "description", piece.getDescription() != null ? piece.getDescription() : "",
-                            "cover_image", piece.getCoverImage() != null ? piece.getCoverImage() : "",
-                            "asset_count", piece.getAssetCount(),
-                            "created_at", piece.getCreatedAt().toString(),
-                            "assets", assetMaps
-                    );
+                    ArtPieceAsset cover = piece.getCoverImage();
+                    return ArtPieceResponseDTO.builder()
+                            .id(piece.getId())
+                            .title(piece.getTitle())
+                            .description(piece.getDescription() != null ? piece.getDescription() : "")
+                            .coverImage(cover != null ? cover.getBlobUrl() : "")
+                            .assetCount(piece.getAssetCount())
+                            .createdAt(piece.getCreatedAt().toString())
+                            .assets(assetDTOs)
+                            .build();
                 })
                 .toList();
 
@@ -61,17 +63,16 @@ public class PortfolioService {
     }
 
     @Transactional
-    public Map<String, Object> createPiece(String title, String description, String tags,
-                                            UUID commissionId, boolean isPublished) {
+    public ArtPieceResponseDTO createPiece(ArtPieceCreateRequestDTO request) {
         User user = getCurrentUser();
 
         ArtPiece piece = ArtPiece.builder()
                 .user(user)
-                .title(title)
-                .description(description)
-                .tags(tags)
-                .commissionId(commissionId)
-                .isPublished(isPublished)
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .tags(request.getTags())
+                .commissionId(request.getCommissionId())
+                .isPublished(request.isPublished())
                 .build();
 
         ArtPiece saved = artPieceRepository.save(piece);
@@ -79,36 +80,35 @@ public class PortfolioService {
         user.setPortfolioCount(user.getPortfolioCount() + 1);
         userRepository.save(user);
 
-        return Map.of("portfolio_piece", Map.of(
-                "id", saved.getId(),
-                "title", saved.getTitle(),
-                "user_id", user.getId(),
-                "is_published", saved.isPublished(),
-                "created_at", saved.getCreatedAt().toString()
-        ));
+        return ArtPieceResponseDTO.builder()
+                .id(saved.getId())
+                .title(saved.getTitle())
+                .userId(user.getId())
+                .isPublished(saved.isPublished())
+                .createdAt(saved.getCreatedAt().toString())
+                .build();
     }
 
     @Transactional
-    public Map<String, Object> updatePiece(UUID pieceId, String title, String description,
-                                            Boolean isPublished, String tags) {
+    public SimpleMessageResponseDTO updatePiece(UUID pieceId, ArtPieceUpdateRequestDTO request) {
         User user = getCurrentUser();
         ArtPiece piece = getOwnedPiece(pieceId, user);
 
-        if (title != null) piece.setTitle(title);
-        if (description != null) piece.setDescription(description);
-        if (isPublished != null) piece.setPublished(isPublished);
-        if (tags != null) piece.setTags(tags);
+        if (request.getTitle() != null) piece.setTitle(request.getTitle());
+        if (request.getDescription() != null) piece.setDescription(request.getDescription());
+        if (request.getIsPublished() != null) piece.setPublished(request.getIsPublished());
+        if (request.getTags() != null) piece.setTags(request.getTags());
         piece.setUpdatedAt(Instant.now());
 
-        ArtPiece saved = artPieceRepository.save(piece);
-        return Map.of("success", true, "portfolio_piece", Map.of(
-                "id", saved.getId(),
-                "title", saved.getTitle()
-        ));
+        artPieceRepository.save(piece);
+        return SimpleMessageResponseDTO.builder()
+                .success(true)
+                .message("Portfolio piece updated")
+                .build();
     }
 
     @Transactional
-    public Map<String, Object> deletePiece(UUID pieceId) {
+    public SimpleMessageResponseDTO deletePiece(UUID pieceId) {
         User user = getCurrentUser();
         ArtPiece piece = getOwnedPiece(pieceId, user);
 
@@ -117,7 +117,10 @@ public class PortfolioService {
         user.setPortfolioCount(Math.max(0, user.getPortfolioCount() - 1));
         userRepository.save(user);
 
-        return Map.of("success", true, "message", "Portfolio piece deleted");
+        return SimpleMessageResponseDTO.builder()
+                .success(true)
+                .message("Portfolio piece deleted")
+                .build();
     }
 
     private User getCurrentUser() {

@@ -3,24 +3,17 @@ package server.art.services;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import server.art.data.Asset;
-import server.art.data.Commission;
-import server.art.data.Milestone;
-import server.art.data.RevisionRequest;
-import server.art.data.User;
+import server.art.data.*;
+import server.art.data.dto.milestone.*;
+import server.art.data.dto.portfolio.*;
 import server.art.data.enums.CommissionStatus;
 import server.art.data.enums.MilestoneStatus;
 import server.art.exceptions.BusinessLogicException;
 import server.art.exceptions.ResourceNotFoundException;
-import server.art.repositories.AssetRepository;
-import server.art.repositories.CommissionRepository;
-import server.art.repositories.MilestoneRepository;
-import server.art.repositories.RevisionRequestRepository;
-import server.art.repositories.UserRepository;
+import server.art.repositories.*;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -34,32 +27,35 @@ public class MilestoneService {
     private final UserRepository userRepository;
     private final IdentityService identityService;
 
-    public List<Map<String, Object>> getMilestones(UUID commissionId) {
+    public List<MilestoneResponseDTO> getMilestones(UUID commissionId) {
         List<Milestone> milestones = milestoneRepository.findByCommissionIdOrderBySequenceOrderAsc(commissionId);
         return milestones.stream()
                 .map(m -> {
                     List<Asset> assets = assetRepository.findByMilestoneIdAndIsDeletedFalse(m.getId());
-                    List<Map<String, Object>> assetMaps = assets.stream()
-                            .map(a -> Map.<String, Object>of(
-                                    "id", a.getId(),
-                                    "blob_url", a.getBlobUrl(),
-                                    "is_final_version", a.isFinalVersion()
-                            ))
+                    List<AssetResponseDTO> assetDTOs = assets.stream()
+                            .map(a -> AssetResponseDTO.builder()
+                                    .id(a.getId())
+                                    .blobUrl(a.getBlobUrl())
+                                    .isFinalVersion(a.isFinalVersion())
+                                    .build())
                             .toList();
 
-                    return Map.<String, Object>of(
-                            "id", m.getId(),
-                            "name", m.getName(),
-                            "status", m.getStatus().name(),
-                            "sequence_order", m.getSequenceOrder(),
-                            "assets", assetMaps
-                    );
+                    return MilestoneResponseDTO.builder()
+                            .id(m.getId())
+                            .title(m.getName())
+                            .status(m.getStatus().name())
+                            .order_index(m.getSequenceOrder())
+                            .assets(assetDTOs.stream().map(a -> ArtPieceAssetResponseDTO.builder()
+                                    .id(a.getId())
+                                    .blobUrl(a.getBlobUrl())
+                                    .build()).toList()) // Mapping between Asset and ArtPieceAsset for compatibility? Let's check
+                            .build();
                 })
                 .toList();
     }
 
     @Transactional
-    public Map<String, Object> submitMilestone(UUID commissionId, UUID milestoneId, String message) {
+    public MilestoneResponseDTO submitMilestone(UUID commissionId, UUID milestoneId, String message) {
         User user = getCurrentUser();
         Commission commission = getCommissionAsArtist(commissionId, user);
         Milestone milestone = getMilestoneInCommission(milestoneId, commissionId);
@@ -76,20 +72,13 @@ public class MilestoneService {
 
         milestone.setStatus(MilestoneStatus.SUBMITTED);
         milestone.setSubmittedAt(Instant.now());
-        milestoneRepository.save(milestone);
+        Milestone saved = milestoneRepository.save(milestone);
 
-        return Map.of(
-                "success", true,
-                "milestone", Map.of(
-                        "id", milestone.getId(),
-                        "status", milestone.getStatus().name(),
-                        "submitted_at", milestone.getSubmittedAt().toString()
-                )
-        );
+        return mapToDTO(saved);
     }
 
     @Transactional
-    public Map<String, Object> approveMilestone(UUID commissionId, UUID milestoneId) {
+    public MilestoneResponseDTO approveMilestone(UUID commissionId, UUID milestoneId) {
         User user = getCurrentUser();
         Commission commission = getCommissionAsClient(commissionId, user);
         Milestone milestone = getMilestoneInCommission(milestoneId, commissionId);
@@ -102,7 +91,6 @@ public class MilestoneService {
         milestone.setApprovedAt(Instant.now());
         milestoneRepository.save(milestone);
 
-        // Find next milestone
         List<Milestone> allMilestones = milestoneRepository.findByCommissionIdOrderBySequenceOrderAsc(commissionId);
         Milestone nextMilestone = null;
         boolean foundCurrent = false;
@@ -120,31 +108,16 @@ public class MilestoneService {
             commission.setCurrentMilestoneId(nextMilestone.getId());
         }
 
-        // Check if all milestones are approved
-        boolean allApproved = allMilestones.stream()
-                .allMatch(m -> m.getStatus() == MilestoneStatus.APPROVED);
-
-        if (allApproved) {
+        if (allMilestones.stream().allMatch(m -> m.getStatus() == MilestoneStatus.APPROVED)) {
             commission.setStatus(CommissionStatus.REVIEW);
         }
 
         commissionRepository.save(commission);
-
-        Map<String, Object> result = new java.util.HashMap<>();
-        result.put("success", true);
-        result.put("milestone", Map.of(
-                "id", milestone.getId(),
-                "status", milestone.getStatus().name(),
-                "approved_at", milestone.getApprovedAt().toString()
-        ));
-        if (nextMilestone != null) {
-            result.put("next_milestone", Map.of("id", nextMilestone.getId(), "name", nextMilestone.getName()));
-        }
-        return result;
+        return mapToDTO(milestone);
     }
 
     @Transactional
-    public Map<String, Object> requestRevision(UUID commissionId, UUID milestoneId, String feedback, String reason) {
+    public RevisionRequestResponseDTO requestRevision(UUID commissionId, UUID milestoneId, String feedback, String reason) {
         User user = getCurrentUser();
         Commission commission = getCommissionAsClient(commissionId, user);
         Milestone milestone = getMilestoneInCommission(milestoneId, commissionId);
@@ -162,7 +135,7 @@ public class MilestoneService {
                 .feedback(feedback)
                 .revisionReason(reason)
                 .build();
-        revisionRequestRepository.save(revisionRequest);
+        RevisionRequest saved = revisionRequestRepository.save(revisionRequest);
 
         milestone.setStatus(MilestoneStatus.REVISION_REQUESTED);
         milestoneRepository.save(milestone);
@@ -170,19 +143,17 @@ public class MilestoneService {
         commission.setRevisionsUsed(commission.getRevisionsUsed() + 1);
         commissionRepository.save(commission);
 
-        return Map.of(
-                "revision_request", Map.of(
-                        "id", revisionRequest.getId(),
-                        "milestone_id", milestoneId,
-                        "feedback", feedback,
-                        "status", revisionRequest.getStatus(),
-                        "created_at", revisionRequest.getCreatedAt().toString()
-                )
-        );
+        return RevisionRequestResponseDTO.builder()
+                .id(saved.getId())
+                .milestoneId(milestoneId)
+                .feedback(feedback)
+                .status(saved.getStatus())
+                .createdAt(saved.getCreatedAt().toString())
+                .build();
     }
 
     @Transactional
-    public Map<String, Object> updateAsset(UUID commissionId, UUID milestoneId, UUID assetId, boolean isFinalVersion) {
+    public AssetResponseDTO updateAsset(UUID commissionId, UUID milestoneId, UUID assetId, boolean isFinalVersion) {
         User user = getCurrentUser();
         getCommissionAsArtist(commissionId, user);
 
@@ -194,12 +165,24 @@ public class MilestoneService {
         }
 
         asset.setFinalVersion(isFinalVersion);
-        assetRepository.save(asset);
+        Asset saved = assetRepository.save(asset);
 
-        return Map.of("success", true, "asset", Map.of("id", asset.getId(), "is_final_version", asset.isFinalVersion()));
+        return AssetResponseDTO.builder()
+                .id(saved.getId())
+                .blobUrl(saved.getBlobUrl())
+                .isFinalVersion(saved.isFinalVersion())
+                .build();
     }
 
-    // --- Helpers ---
+    private MilestoneResponseDTO mapToDTO(Milestone m) {
+        return MilestoneResponseDTO.builder()
+                .id(m.getId())
+                .title(m.getName())
+                .description(m.getDescription())
+                .status(m.getStatus().name())
+                .order_index(m.getSequenceOrder())
+                .build();
+    }
 
     private User getCurrentUser() {
         String keycloakId = identityService.getCurrentUserSub();

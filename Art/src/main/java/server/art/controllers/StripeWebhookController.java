@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import server.art.data.dto.common.SimpleMessageResponseDTO;
 import server.art.services.PaymentService;
 
 import java.util.Map;
@@ -17,13 +18,8 @@ public class StripeWebhookController {
 
     private final PaymentService paymentService;
 
-    /**
-     * Stripe webhook endpoint.
-     * TODO: Add real Stripe signature validation using the webhook secret.
-     * This endpoint is publicly accessible (no JWT required) but secured via Stripe signatures.
-     */
     @PostMapping("/stripe")
-    public ResponseEntity<Map<String, Boolean>> handleStripeWebhook(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<SimpleMessageResponseDTO> handleStripeWebhook(@RequestBody Map<String, Object> payload) {
         String eventType = (String) payload.get("type");
 
         @SuppressWarnings("unchecked")
@@ -34,6 +30,9 @@ public class StripeWebhookController {
 
         paymentService.handleWebhookEvent(eventType, eventObject);
 
-        return ResponseEntity.ok(Map.of("received", true));
+        return ResponseEntity.ok(SimpleMessageResponseDTO.builder()
+                .success(true)
+                .message("Webhook processed")
+                .build());
     }
 }

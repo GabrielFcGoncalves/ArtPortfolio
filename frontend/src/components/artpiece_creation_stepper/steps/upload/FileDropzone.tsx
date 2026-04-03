@@ -1,53 +1,108 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
+import { useArtpieceForm } from '@/lib/context/ArtpieceContext';
+import { IdleState } from './components/IdleState';
+import { UploadingState } from './components/UploadingState';
+import { PreviewState } from './components/PreviewState';
 
-interface FileDropzoneProps {
-  file: File | null;
-  error?: string;
-  onUpload: () => void;
-}
+export function FileDropzone() {
+  const { formData, updateField } = useArtpieceForm();
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-export function FileDropzone({ file, error, onUpload }: FileDropzoneProps) {
+  const handleFile = (file: File) => {
+    if (file.type.startsWith('image/')) {
+      setIsUploading(true);
+      setProgress(0);
+      const url = URL.createObjectURL(file);
+      updateField('previewUrl', url);
+
+      // Simulate upload progress
+      let p = 0;
+      const interval = setInterval(() => {
+        p += Math.floor(Math.random() * 15) + 5;
+        if (p >= 100) {
+          p = 100;
+          clearInterval(interval);
+          setIsUploading(false);
+          updateField('file', file);
+        }
+        setProgress(p);
+      }, 200);
+    } else {
+      alert('Please upload an image file');
+    }
+  };
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+  };
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const onDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleRemove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    updateField('file', null);
+    updateField('previewUrl', null);
+    setIsUploading(false);
+    setProgress(0);
+  };
+
   return (
-    <div className="relative group" onClick={onUpload}>
-      <div className={`border-2 ${error ? 'border-error' : 'border-dashed border-outline-variant hover:border-primary'} rounded-xl p-12 flex flex-col items-center justify-center transition-all duration-300 hover:bg-surface-container-low cursor-pointer min-h-[300px]`}>
+    <div 
+      className={`relative group transition-all duration-300 ${isDragging ? 'scale-[1.02]' : ''}`}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onClick={triggerFileInput}
+    >
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={onFileChange} 
+        className="hidden" 
+        accept="image/*"
+      />
+      
+      <div className={`border-2 rounded-xl p-12 flex flex-col items-center justify-center transition-all duration-300 hover:bg-surface-container-low cursor-pointer min-h-[300px] ${
+        isDragging ? 'border-primary bg-primary/5' : 'border-dashed border-outline-variant hover:border-primary'
+      }`}>
         
-        <div className="mb-8 w-24 h-24 bg-primary-container/30 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-          <span className="material-symbols-outlined text-4xl text-primary" style={{ fontVariationSettings: "'FILL' 0" }}>upload_file</span>
-        </div>
-        
-        <h3 className="text-2xl font-headline font-bold text-on-surface mb-2">Drag &amp; Drop Your Masterpiece</h3>
-        <p className="text-on-surface-variant mb-12 text-center max-w-md">The Curated Atelier handles the digital preservation of your work with professional grade color profiles.</p>
-        
-        {file ? (
-          <UploadStatus name={file.name} size="11.2MB" />
+        {isUploading ? (
+          <UploadingState 
+            name={formData.previewUrl ? 'Preparing Masterpiece...' : 'Processing...'} 
+            size={fileInputRef.current?.files?.[0] ? `${(fileInputRef.current.files[0].size / (1024 * 1024)).toFixed(1)}MB` : "Calculating..."} 
+            progress={progress}
+          />
+        ) : formData.file && formData.previewUrl ? (
+          <PreviewState 
+            url={formData.previewUrl}
+            name={formData.file.name}
+            onRemove={handleRemove}
+          />
         ) : (
-          <div className="mt-4 text-center">
-            <p className="text-xs font-bold text-primary mb-1">High-res PNG/JPG preferred. Max 100MB.</p>
-            <p className="text-[10px] text-outline uppercase tracking-wider">Raw formats supported via Atelier+ subscription</p>
-          </div>
+          <IdleState />
         )}
-      </div>
-      {error && <p className="text-error text-xs font-bold mt-2 ml-4">{error}</p>}
-    </div>
-  );
-}
-
-function UploadStatus({ name, size }: { name: string; size: string }) {
-  return (
-    <div className="w-full max-w-md bg-surface-container-lowest rounded-lg p-6 shadow-sm border border-outline-variant/10">
-      <div className="flex justify-between items-center mb-3">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-sm text-primary" style={{ fontVariationSettings: "'FILL' 0" }}>brush</span>
-          <span className="text-xs font-bold text-on-surface">{name}</span>
-        </div>
-        <span className="text-xs font-bold text-primary">100%</span>
-      </div>
-      <div className="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
-        <div className="h-full bg-primary transition-all duration-700 w-full" style={{ width: '100%' }}></div>
-      </div>
-      <div className="mt-4 flex justify-between items-center">
-        <span className="text-[10px] text-on-surface-variant font-medium">Processing complete</span>
-        <span className="text-[10px] text-on-surface-variant font-medium">{size} / {size}</span>
       </div>
     </div>
   );

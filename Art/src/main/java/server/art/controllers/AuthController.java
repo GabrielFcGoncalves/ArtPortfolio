@@ -7,6 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import server.art.data.dto.auth.*;
 import server.art.dto.auth.AuthCallbackResponse;
 import server.art.services.AuthService;
 
@@ -27,7 +28,6 @@ public class AuthController {
         String email = jwt.getClaimAsString("email");
         String preferredUsername = jwt.getClaimAsString("preferred_username");
 
-        // Extract role from realm_access
         @SuppressWarnings("unchecked")
         Map<String, Object> realmAccess = (Map<String, Object>) jwt.getClaims().get("realm_access");
         String role = "USER";
@@ -48,8 +48,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, Object>> logout() {
-        Map<String, Object> response = authService.handleLogout();
-        return ResponseEntity.ok(response);
+    public ResponseEntity<LogoutResponseDTO> logout() {
+        return ResponseEntity.ok(authService.handleLogout());
     }
 }

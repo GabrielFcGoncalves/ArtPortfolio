@@ -1,15 +1,16 @@
 import React from 'react';
-import { ArtpieceFormState, ArtpieceFormErrors } from '../../ArtpieceCreationModal';
 import { VisibilitySettings } from './VisibilitySettings';
 import { SaleStatusSettings } from './SaleStatusSettings';
+import { useArtpieceForm } from '@/lib/context/ArtpieceContext';
 
 interface Props {
-  formData: ArtpieceFormState;
-  errors: ArtpieceFormErrors;
-  onUpdate: <K extends keyof ArtpieceFormState>(field: K, value: ArtpieceFormState[K]) => void;
+  errors: any;
 }
 
-export default function PublishStep({ formData, errors, onUpdate }: Props) {
+export default function PublishStep({ errors }: Props) {
+  const { formData, updateField } = useArtpieceForm();
+  const { nsfw } = formData.publish;
+
   return (
     <div className="space-y-10 p-6">
       <div className="space-y-1">
@@ -17,24 +18,16 @@ export default function PublishStep({ formData, errors, onUpdate }: Props) {
         <p className="text-on-surface-variant text-sm">Define how your artwork will be discovered and acquired.</p>
       </div>
 
-      <VisibilitySettings 
-        visibility={formData.visibility} 
-        onUpdate={(val) => onUpdate('visibility', val)} 
-      />
+      <VisibilitySettings />
 
-      <SaleStatusSettings 
-        saleStatus={formData.saleStatus} 
-        price={formData.price} 
-        errors={errors} 
-        onUpdate={onUpdate as any} 
-      />
+      <SaleStatusSettings errors={errors} />
 
       <section className="pt-2">
         <label className="flex items-center p-5 bg-tertiary-container/10 border border-tertiary/20 rounded-xl cursor-pointer hover:bg-tertiary-container/20 transition-colors">
           <input 
             type="checkbox" 
-            checked={formData.nsfw}
-            onChange={(e) => onUpdate('nsfw', e.target.checked)}
+            checked={nsfw}
+            onChange={(e) => updateField('publish.nsfw', e.target.checked)}
             className="w-5 h-5 rounded border-tertiary text-tertiary focus:ring-tertiary" 
           />
           <div className="ml-4">
