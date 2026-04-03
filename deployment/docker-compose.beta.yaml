@@ -42,6 +42,45 @@ services:
       - artist-net
 
 
+  # --- 7. BACKEND API (Spring Boot) ---
+  api:
+    build: 
+      context: ../Art
+      dockerfile: Dockerfile
+    container_name: artist_os_api
+    depends_on:
+      - db-relational
+      - db-nosql
+      - cache
+      - iam
+      - azure-mock
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../Art:/app
+      - /app/target
+      - /app/.mvn
+    environment:
+      # Database Connections
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://db-relational:5432/platform}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-postgres}
+      SPRING_DATA_MONGODB_URI: ${SPRING_DATA_MONGODB_URI:-mongodb://db-nosql:27017/portfolio}
+      SPRING_REDIS_HOST: ${SPRING_REDIS_HOST:-cache}
+      
+      # Security / IAM
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ${KC_ISSUER_URI:-http://iam:8080/realms/platform}
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      
+      # Azure Mock Connection (Standard Azurite Connection String)
+      AZURE_STORAGE_CONNECTION_STRING: ${AZURE_STORAGE_CONNECTION_STRING:-DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azure-mock:10000/devstoreaccount1;}
+      
+      # External Integrations
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+    networks:
+      - artist-net
+
+
   db-relational:
     image: postgres:15-alpine
     container_name: artist_os_postgres
@@ -63,8 +102,6 @@ services:
       retries: 5
 
 
-
-
   frontend:
     build:
       context: ../frontend
@@ -83,6 +120,39 @@ services:
       - artist-net
 
 
+  # --- 3. NON-RELATIONAL DATA (MongoDB) ---
+  db-nosql:
+    image: mongo:latest
+    container_name: artist_os_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - artist-net
+
+  # --- 4. CACHE LAYER (Redis) ---
+  cache:
+    image: redis:alpine
+    container_name: artist_os_redis
+    networks:
+      - artist-net
+
+  # --- 5. AZURE CLOUD MOCK (Azurite) ---
+  azure-mock:
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0
+    container_name: artist_os_azurite
+    ports:
+      - "10000:10000" # Blob
+      - "10001:10001" # Queue
+    volumes:
+      - azurite_data:/data
+    networks:
+      - artist-net
+
+
+
 
 networks:
   artist-net:
@@ -91,3 +161,5 @@ networks:
 volumes:
   artist_keycloak_data:
   artist_pgdata:
+  mongodata:
+  azurite_data:

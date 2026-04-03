@@ -1,5 +1,5 @@
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
-COPY target/Art-1.0.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+COPY . .
+# Run the app using the wrapper
+ENTRYPOINT ["./mvnw", "spring-boot:run"]
