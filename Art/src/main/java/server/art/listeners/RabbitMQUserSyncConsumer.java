@@ -1,0 +1,29 @@
+package server.art.listeners;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+
+@Slf4j
+@Service
+@ConditionalOnProperty(name = "message.broker", havingValue = "rabbitmq")
+public class RabbitMQUserSyncConsumer {
+
+    private final UserRegistrationProcessor processor;
+
+    public RabbitMQUserSyncConsumer(UserRegistrationProcessor processor) {
+        this.processor = processor;
+        log.info("Initialized RabbitMQ User Sync Consumer");
+    }
+
+    @RabbitListener(queues = "user-registration-queue")
+    public void receiveMessage(String messageBody) {
+        try {
+            processor.processRegistration(messageBody);
+        } catch (Exception e) {
+            log.error("Failed to process RabbitMQ message: {}", e.getMessage(), e);
+            throw new RuntimeException("Requeue message", e); // Throwing exception requeues by default in spring AMQP
+        }
+    }
+}

@@ -5,7 +5,7 @@ interface Props {
   errors: any;
 }
 
-export default function UploadStep({ errors }: Props) {
+export default function UploadStep({ errors }: Readonly<Props>) {
   return (
     <div className="space-y-10 p-6">
       <div className="space-y-1">

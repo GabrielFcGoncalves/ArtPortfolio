@@ -57,6 +57,33 @@ services:
   #   networks:
   #     - artist-net
 
+  # --- 9. LOCAL AZURE BUS (Service Bus Emulator) ---
+  asb-sql:
+    image: mcr.microsoft.com/azure-sql-edge
+    container_name: artist_os_asb_sql_dev
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+    networks:
+      - artist-net
+
+  service-bus:
+    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
+    container_name: artist_os_service_bus_dev
+    depends_on:
+      - asb-sql
+    ports:
+      - "5672:5672" # AMQP
+      - "5300:5300" # Management
+    volumes:
+      - ${ASB_CONFIG_PATH:-./asb-config.json}:/ServiceBus_Emulator/ConfigFiles/Config.json
+    environment:
+      - ACCEPT_EULA=Y
+      - SQL_SERVER=asb-sql
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+    networks:
+      - artist-net
+
   # --- 6. IMAGE PROCESSING (ImgProxy) ---
   # imgproxy:
   #   image: darthsim/imgproxy:latest
@@ -98,6 +125,7 @@ services:
       
   #     # External Integrations
   #     STRIPE_API_KEY: ${STRIPE_API_KEY}
+  #     SPRING_SERVICE_BUS_CONNECTION_STRING: ${SPRING_SERVICE_BUS_CONNECTION_STRING}
   #   networks:
   #     - artist-net
 

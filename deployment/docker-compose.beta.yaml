@@ -22,10 +22,17 @@ services:
       KC_DB_PASSWORD: ${KC_DB_PASSWORD}
       KC_CLIENT_SECRET: ${KC_CLIENT_SECRET}
       KC_FRONTEND_URL: ${KC_FRONTEND_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
       KC_BACKEND_URL: ${KC_BACKEND_URL}
       JAVA_OPTS_APPEND: "-Dkeycloak.migration.strategy=IGNORE_EXISTING"
       KC_DB_POOL_INITIAL_SIZE: 5
       KC_DB_POOL_MAX_SIZE: 10
+      SPRING_SERVICE_BUS_CONNECTION_STRING: ${SPRING_SERVICE_BUS_CONNECTION_STRING}
+      MESSAGE_BROKER: ${MESSAGE_BROKER}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
 
     ports:
       - "8081:8080"
@@ -54,6 +61,7 @@ services:
       - cache
       - iam
       - azure-mock
+      - rabbitmq
     ports:
       - "8080:8080"
     volumes:
@@ -65,11 +73,12 @@ services:
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://db-relational:5432/platform}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-postgres}
-      SPRING_DATA_MONGODB_URI: ${SPRING_DATA_MONGODB_URI:-mongodb://db-nosql:27017/portfolio}
+      SPRING_DATA_MONGODB_URI: ${SPRING_DATA_MONGODB_URI}
       SPRING_REDIS_HOST: ${SPRING_REDIS_HOST:-cache}
       
       # Security / IAM
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ${KC_ISSUER_URI:-http://iam:8080/realms/platform}
+      SPRING_KC_ISSUER_URI: ${SPRING_KC_ISSUER_URI}
+      SPRING_KC_JWK_URI: ${SPRING_KC_JWK_URI}
       SPRING_DEVTOOLS_RESTART_ENABLED: "true"
       
       # Azure Mock Connection (Standard Azurite Connection String)
@@ -77,6 +86,14 @@ services:
       
       # External Integrations
       STRIPE_API_KEY: ${STRIPE_API_KEY}
+      SPRING_SERVICE_BUS_CONNECTION_STRING: ${SPRING_SERVICE_BUS_CONNECTION_STRING}
+      MESSAGE_BROKER: ${MESSAGE_BROKER}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+    extra_hosts:
+      - "localhost:host-gateway"
     networks:
       - artist-net
 
@@ -148,6 +165,19 @@ services:
       - "10001:10001" # Queue
     volumes:
       - azurite_data:/data
+    networks:
+      - artist-net
+
+  # --- 9. LOCAL MESSAGE BROKER (RabbitMQ) ---
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: artist_os_rabbitmq
+    ports:
+      - "5672:5672" # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
     networks:
       - artist-net
 

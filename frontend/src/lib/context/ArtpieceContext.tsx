@@ -1,9 +1,17 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import { portfolioService } from '@/services/api_client';
 
 // Define the interface for Artpiece Form Data
+export interface ArtpieceAsset {
+  id: string;
+  file: File;
+  previewUrl: string;
+  isUploading?: boolean;
+  progress?: number;
+}
+
 export interface ArtpieceFormData {
-  file: File | null;
-  previewUrl: string | null;
+  assets: ArtpieceAsset[];
   metadata: {
     title: string;
     description: string;
@@ -29,15 +37,17 @@ export interface ArtpieceFormData {
 interface ArtpieceContextType {
   formData: ArtpieceFormData;
   updateField: (path: string, value: any) => void;
+  addAsset: (asset: ArtpieceAsset) => void;
+  moveAsset: (fromIndex: number, toIndex: number) => void;
+  removeAsset: (id: string) => void;
   submit: () => Promise<any>;
 }
 
 const ArtpieceContext = createContext<ArtpieceContextType | null>(null);
 
-export function ArtpieceProvider({ children }: { children: React.ReactNode }) {
+export function ArtpieceProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [formData, setFormData] = useState<ArtpieceFormData>({
-    file: null,
-    previewUrl: null,
+    assets: [],
     metadata: { title: '', description: '', tags: [] },
     protection: {
       disableRightClick: true,
@@ -55,7 +65,7 @@ export function ArtpieceProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  const updateField = (path: string, value: any) => {
+  const updateField = useCallback((path: string, value: any) => {
     setFormData(prev => {
       const keys = path.split('.');
       const newData = { ...prev };
@@ -68,40 +78,80 @@ export function ArtpieceProvider({ children }: { children: React.ReactNode }) {
       }
       
       // Update value
-      current[keys[keys.length - 1]] = value;
+      const lastKey = keys.at(-1);
+      if (lastKey) {
+        current[lastKey] = value;
+      }
       return newData;
     });
-  };
+  }, []);
 
-  const submit = async () => {
-    // Validate all steps
-    if (!formData.file) throw new Error('File required');
+  const addAsset = useCallback((asset: ArtpieceAsset) => {
+    setFormData(prev => ({
+      ...prev,
+      assets: [...prev.assets, asset]
+    }));
+  }, []);
+
+  const moveAsset = useCallback((fromIndex: number, toIndex: number) => {
+    setFormData(prev => {
+      const newAssets = [...prev.assets];
+      const [moved] = newAssets.splice(fromIndex, 1);
+      newAssets.splice(toIndex, 0, moved);
+      return { ...prev, assets: newAssets };
+    });
+  }, []);
+
+  const removeAsset = useCallback((id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      assets: prev.assets.filter(a => a.id !== id)
+    }));
+  }, []);
+
+  const submit = useCallback(async () => {
+    // 1. Validation
+    if (formData.assets.length === 0) throw new Error('At least one file required');
     if (!formData.metadata.title) throw new Error('Title required');
     
-    // Upload logic will go here
-    console.log('Submitting artpiece:', formData);
-    
-    /* 
-    // Example flow (Requires backend API integration)
-    const sasResponse = await api.getSasToken(formData.file.name);
-    await uploadToAzure(sasResponse.sas_url, formData.file);
-    
-    const response = await api.createArtpiece({
-      blob_path: sasResponse.blob_path,
+    // 2. Simulated Storage Upload
+    // Since real Azure Blob storage is not configured yet, 
+    // we simulate generating the blobPaths after the upload.
+    const blobPaths = formData.assets.map(asset => {
+      const sanitizedName = asset.file.name.replaceAll(/\s+/g, '_').toLowerCase();
+      const uniqueId = Math.random().toString(36).substring(2, 8);
+      return `portfolio/pieces/${uniqueId}-${sanitizedName}`;
+    });
+
+    // 3. Prepare Payload
+    const payload = {
       title: formData.metadata.title,
       description: formData.metadata.description,
-      tags: formData.metadata.tags,
-      visibility: formData.protection.visibility,
-      is_published: formData.publish.isPublished
-    });
-    return response;
-    */
+      tags: formData.metadata.tags.join(','),
+      blobPaths: blobPaths,
+      isPublished: formData.publish.isPublished
+    };
 
-    return { success: true };
-  };
+    try {
+      const result = await portfolioService.createPiece(payload);
+      return result;
+    } catch (error) {
+      console.error('Atelier Sync Failed:', error);
+      throw new Error('Failed to save your art piece. Please try again.');
+    }
+  }, [formData]);
+
+  const value = useMemo(() => ({
+    formData,
+    updateField,
+    addAsset,
+    moveAsset,
+    removeAsset,
+    submit
+  }), [formData, updateField, addAsset, moveAsset, removeAsset, submit]);
 
   return (
-    <ArtpieceContext.Provider value={{ formData, updateField, submit }}>
+    <ArtpieceContext.Provider value={value}>
       {children}
     </ArtpieceContext.Provider>
   );

@@ -25,6 +25,12 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         }
     }, [])
 
+    const onTokens = useCallback((tokens: { token?: string }) => {
+        if (globalThis.window !== undefined && tokens.token) {
+            localStorage.setItem('keycloak_token', tokens.token);
+        }
+    }, []);
+
     return (
         <>
             {errorMessage && <div className="fixed top-0 left-0 right-0 bg-red-500 text-white p-4 z-50 text-center">{errorMessage}</div>}
@@ -32,6 +38,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
                 authClient={keycloak}
                 initOptions={initOptions}
                 onEvent={onEvent}
+                onTokens={onTokens}
                 LoadingComponent={<LoadingPage />}
             >
                 {children}

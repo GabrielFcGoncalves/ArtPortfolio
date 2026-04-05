@@ -33,8 +33,8 @@ function ArtpieceCreationModalContent({ onClose }: ArtpieceCreationModalProps) {
     let isValid = true;
 
     if (step === 1) {
-      if (!formData.file) {
-        newErrors.file = 'Please upload an art piece.';
+      if (formData.assets.length === 0) {
+        newErrors.file = 'Please upload at least one art piece.';
         isValid = false;
       }
     } else if (step === 2) {

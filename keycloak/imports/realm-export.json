@@ -33,6 +33,24 @@
   {
     "realm": "platform",
     "enabled": true,
+    "registrationAllowed": true,
+    "registrationEmailAsUsername": true,
+    "verifyEmail": false,
+    "resetPasswordAllowed": true,
+    "rememberMe": true,
+    "defaultRoles": [
+      "USER"
+    ],
+    "eventsEnabled": true,
+    "eventsListeners": [
+      "jboss-logging",
+      "my-asb-listener" 
+    ],
+    "enabledEventTypes": [
+      "REGISTER",
+      "LOGIN",
+      "LOGIN_ERROR"
+    ],
     "loginTheme": "default",
     "roles": {
       "realm": [
@@ -97,13 +115,13 @@
         "enabled": true,
         "publicClient": true,
         "redirectUris": [
-          "${KC_FRONTEND_URL}/*",
-          "${KC_FRONTEND_URL}/admin/*",
-          "${KC_FRONTEND_URL}/artist/*",
-          "${KC_FRONTEND_URL}/user/*"
+          "${FRONTEND_URL}/*",
+          "${FRONTEND_URL}/admin/*",
+          "${FRONTEND_URL}/artist/*",
+          "${FRONTEND_URL}/user/*"
         ],
         "webOrigins": [
-          "${KC_FRONTEND_URL}"
+          "${FRONTEND_URL}"
         ],
         "protocolMappers": [
           {

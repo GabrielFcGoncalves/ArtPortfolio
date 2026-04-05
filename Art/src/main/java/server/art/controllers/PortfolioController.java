@@ -16,6 +16,7 @@ import server.art.data.dto.common.*;
 import server.art.dto.PaginatedResponse;
 import server.art.services.PortfolioService;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -32,10 +33,24 @@ public class PortfolioController {
         return ResponseEntity.ok(portfolioService.getPortfolio(userId, page, limit));
     }
 
+    @GetMapping("/api/users/me/portfolio")
+    public ResponseEntity<PaginatedResponse<ArtPieceResponseDTO>> getMyPortfolio(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "12") int limit) {
+        return ResponseEntity.ok(portfolioService.getMyPortfolio(page, limit));
+    }
+
     @PostMapping("/api/users/me/portfolio")
     public ResponseEntity<ArtPieceResponseDTO> createPiece(@RequestBody ArtPieceCreateRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(portfolioService.createPiece(request));
+    }
+
+    @PostMapping("/api/users/me/portfolio/{pieceId}/reorder-assets")
+    public ResponseEntity<SimpleMessageResponseDTO> reorderAssets(
+            @PathVariable UUID pieceId,
+            @RequestBody List<UUID> assetIds) {
+        return ResponseEntity.ok(portfolioService.reorderAssets(pieceId, assetIds));
     }
 
     @PatchMapping("/api/users/me/portfolio/{pieceId}")

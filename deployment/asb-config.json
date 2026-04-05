@@ -1,0 +1,36 @@
+{
+  "UserConfig": {
+    "Namespaces": [
+      {
+        "Name": "sbemulatorns",
+        "Queues": [
+          {
+            "Name": "user-registration-queue"
+          },
+          {
+            "Name": "artist-notifications"
+          },
+          {
+            "Name": "art-processing-queue"
+          }
+        ],
+        "Topics": [
+          {
+            "Name": "portfolio-updates",
+            "Subscriptions": [
+              {
+                "Name": "search-index-sync"
+              },
+              {
+                "Name": "email-notifications"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "Logging": {
+      "Type": "File"
+    }
+  }
+}
