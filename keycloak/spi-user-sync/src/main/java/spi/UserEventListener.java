@@ -2,7 +2,7 @@ package spi;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jboss.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.keycloak.events.Event;
 import org.keycloak.events.EventListenerProvider;
 import org.keycloak.events.EventType;
@@ -14,9 +14,8 @@ import org.keycloak.models.UserModel;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class UserEventListener implements EventListenerProvider {
-
-    private static final Logger logger = Logger.getLogger(UserEventListener.class);
 
     private final KeycloakSession session;
     private final EventPublisher publisher;
@@ -30,7 +29,9 @@ public class UserEventListener implements EventListenerProvider {
 
     @Override
     public void onEvent(Event event) {
+        log.info("Received Keycloak Event: type={}, realm={}, user={}", event.getType(), event.getRealmId(), event.getUserId());
         if (EventType.REGISTER.equals(event.getType())) {
+            log.info("Processing REGISTER event for user: {}", event.getUserId());
             try {
                 // Fetch the user from the session
                 RealmModel realm = session.realms().getRealm(event.getRealmId());
@@ -43,23 +44,53 @@ public class UserEventListener implements EventListenerProvider {
                     payload.put("email", user.getEmail());
 
                     String json = mapper.writeValueAsString(payload);
-                    logger.debug("Keycloak emitting REGISTER event to Service Bus -> " + json);
+                    log.debug("Keycloak emitting REGISTER event to Service Bus -> " + json);
                     
                     if (publisher != null) {
                         publisher.publish(json);
                     } else {
-                        logger.error("Publisher client is null. Cannot send message.");
+                        log.error("Publisher client is null. Cannot send message.");
                     }
                 }
             } catch (Exception e) {
-                logger.error("Failed to publish registration event to Service Bus: " + e.getMessage(), e);
+                log.error("Failed to publish registration event to Service Bus: " + e.getMessage(), e);
             }
         }
     }
 
     @Override
     public void onEvent(AdminEvent adminEvent, boolean b) {
-        // We only care about user-driven registration for now
+        log.info("Received Keycloak Admin Event: operation={}, resourcePath={}, realm={}", 
+                adminEvent.getOperationType(), adminEvent.getResourcePath(), adminEvent.getRealmId());
+        
+        // Handle User Creation via Admin API/UI
+        if ("USER".equals(adminEvent.getResourceType().name()) && "CREATE".equals(adminEvent.getOperationType().name())) {
+            log.info("Admin created a USER. Syncing to Postgres...");
+            try {
+                // Resource path for user creation is usually "users/UUID"
+                String resourcePath = adminEvent.getResourcePath();
+                String userId = resourcePath.split("/")[1];
+                
+                RealmModel realm = session.realms().getRealm(adminEvent.getRealmId());
+                UserModel user = session.users().getUserById(realm, userId);
+
+                if (user != null) {
+                    Map<String, String> payload = new HashMap<>();
+                    payload.put("keycloakId", user.getId());
+                    payload.put("username", user.getUsername());
+                    payload.put("email", user.getEmail());
+
+                    String json = mapper.writeValueAsString(payload);
+                    log.info("Admin sync: emitting event -> {}", json);
+                    
+                    if (publisher != null) {
+                        publisher.publish(json);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Failed to sync Admin-created user: " + e.getMessage(), e);
+            }
+        }
     }
 
     @Override

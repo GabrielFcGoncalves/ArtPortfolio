@@ -173,11 +173,14 @@ services:
     image: rabbitmq:3-management
     container_name: artist_os_rabbitmq
     ports:
-      - "5672:5672" # AMQP
+      - "5672:5672" # AMQP 0.9.1 / 1.0
       - "15672:15672" # Management UI
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    # Command to enable AMQP 1.0 plugin
+    command: >
+      sh -c "rabbitmq-plugins enable rabbitmq_amqp1_0 && rabbitmq-server"
     networks:
       - artist-net
 

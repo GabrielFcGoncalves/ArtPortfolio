@@ -3,17 +3,18 @@ package spi;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import org.jboss.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class RabbitMQPublisher implements EventPublisher {
 
-    private static final Logger logger = Logger.getLogger(RabbitMQPublisher.class);
     private Connection connection;
     private Channel channel;
     private final String queueName;
 
     public RabbitMQPublisher(String host, int port, String username, String password, String queueName) {
         this.queueName = queueName;
+        log.info("Initializing RabbitMQPublisher: host={}, port={}, queue={}", host, port, queueName);
         try {
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost(host);
@@ -26,18 +27,19 @@ public class RabbitMQPublisher implements EventPublisher {
             
             // Declare the queue as durable
             this.channel.queueDeclare(queueName, true, false, false, null);
-            logger.debug("Successfully initialized RabbitMQ Sender in Keycloak.");
+            log.info("Successfully connected to RabbitMQ and declared queue: {}", queueName);
         } catch (Exception e) {
-            logger.error("Failed to initialize RabbitMQ Sender: " + e.getMessage());
+            log.error("Failed to initialize RabbitMQ Sender: " + e.getMessage(), e);
         }
     }
 
     @Override
     public void publish(String messageJson) throws Exception {
         if (channel != null && channel.isOpen()) {
-            channel.basicPublish("", queueName, null, messageJson.getBytes("UTF-8"));
+            log.debug("Publishing message to RabbitMQ queue {}: {}", queueName, messageJson);
+            channel.basicPublish("", queueName, null, messageJson.getBytes("UTF_8"));
         } else {
-            logger.error("RabbitMQ channel is null or closed. Cannot send message.");
+            log.error("RabbitMQ channel is null or closed. Cannot send message.");
         }
     }
 

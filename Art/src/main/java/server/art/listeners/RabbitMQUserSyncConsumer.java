@@ -19,6 +19,7 @@ public class RabbitMQUserSyncConsumer {
 
     @RabbitListener(queues = "user-registration-queue")
     public void receiveMessage(String messageBody) {
+        log.info("Received message from RabbitMQ: {}", messageBody);
         try {
             processor.processRegistration(messageBody);
         } catch (Exception e) {

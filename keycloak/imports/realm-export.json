@@ -44,7 +44,7 @@
     "eventsEnabled": true,
     "eventsListeners": [
       "jboss-logging",
-      "my-asb-listener" 
+      "user-sync-listener" 
     ],
     "enabledEventTypes": [
       "REGISTER",

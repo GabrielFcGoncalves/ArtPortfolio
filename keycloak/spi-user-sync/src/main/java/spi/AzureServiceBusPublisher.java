@@ -3,14 +3,15 @@ package spi;
 import com.azure.messaging.servicebus.ServiceBusClientBuilder;
 import com.azure.messaging.servicebus.ServiceBusMessage;
 import com.azure.messaging.servicebus.ServiceBusSenderClient;
-import org.jboss.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class AzureServiceBusPublisher implements EventPublisher {
 
-    private static final Logger logger = Logger.getLogger(AzureServiceBusPublisher.class);
     private ServiceBusSenderClient senderClient;
 
     public AzureServiceBusPublisher(String connectionString, String queueName) {
+        log.info("Initializing AzureServiceBusPublisher for queue: {}", queueName);
         if (connectionString != null && !connectionString.isEmpty()) {
             try {
                 this.senderClient = new ServiceBusClientBuilder()
@@ -18,9 +19,9 @@ public class AzureServiceBusPublisher implements EventPublisher {
                         .sender()
                         .queueName(queueName)
                         .buildClient();
-                logger.debug("Successfully initialized Azure Service Bus Sender in Keycloak.");
+                log.info("Successfully initialized Azure Service Bus Sender in Keycloak.");
             } catch (Exception e) {
-                logger.error("Failed to initialize Azure Service Bus Sender: " + e.getMessage());
+                log.error("Failed to initialize Azure Service Bus Sender: " + e.getMessage(), e);
             }
         }
     }
@@ -28,9 +29,10 @@ public class AzureServiceBusPublisher implements EventPublisher {
     @Override
     public void publish(String messageJson) throws Exception {
         if (senderClient != null) {
+            log.debug("Publishing message to Azure Service Bus: {}", messageJson);
             senderClient.sendMessage(new ServiceBusMessage(messageJson));
         } else {
-            logger.error("ASB sender client is null. Cannot send message.");
+            log.error("ASB sender client is null. Cannot send message.");
         }
     }
 

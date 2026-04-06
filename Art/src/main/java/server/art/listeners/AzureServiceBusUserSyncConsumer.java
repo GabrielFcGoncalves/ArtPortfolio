@@ -58,6 +58,7 @@ public class AzureServiceBusUserSyncConsumer {
 
     private void processMessage(ServiceBusReceivedMessage message) {
         String messageBody = message.getBody().toString();
+        log.info("Received message from Azure Service Bus: {}", messageBody);
         try {
             processor.processRegistration(messageBody);
             receiver.complete(message);

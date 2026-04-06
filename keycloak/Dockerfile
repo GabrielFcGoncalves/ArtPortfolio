@@ -9,11 +9,15 @@ RUN mvn clean package -DskipTests
 # Stage 2: Runtime Keycloak image
 FROM quay.io/keycloak/keycloak:26.4
 
-# Copy realm imports
-COPY imports /opt/keycloak/data/import
-
 # Copy compiled SPI provider
 COPY --from=builder /workspace/spi/target/*-jar-with-dependencies.jar /opt/keycloak/providers/user-sync-spi.jar
+
+# --- CRITICAL MISSING STEP ---
+# This tells Keycloak to scan the providers folder and register your SPI
+RUN /opt/keycloak/bin/kc.sh build
+
+# Copy realm imports (doing this after build is fine)
+COPY imports /opt/keycloak/data/import
 
 # Set entrypoint command
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
