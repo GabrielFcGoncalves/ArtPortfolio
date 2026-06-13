@@ -1,6 +1,5 @@
 package spi;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.events.Event;
@@ -29,11 +28,13 @@ public class UserEventListener implements EventListenerProvider {
 
     @Override
     public void onEvent(Event event) {
-        log.info("Received Keycloak Event: type={}, realm={}, user={}", event.getType(), event.getRealmId(), event.getUserId());
+        log.info("Received Keycloak Event: type={}, realm={}, user={}", event.getType(), event.getRealmId(),
+                event.getUserId());
+
         if (EventType.REGISTER.equals(event.getType())) {
             log.info("Processing REGISTER event for user: {}", event.getUserId());
+
             try {
-                // Fetch the user from the session
                 RealmModel realm = session.realms().getRealm(event.getRealmId());
                 UserModel user = session.users().getUserById(realm, event.getUserId());
 
@@ -45,7 +46,7 @@ public class UserEventListener implements EventListenerProvider {
 
                     String json = mapper.writeValueAsString(payload);
                     log.debug("Keycloak emitting REGISTER event to Service Bus -> " + json);
-                    
+
                     if (publisher != null) {
                         publisher.publish(json);
                     } else {
@@ -60,17 +61,16 @@ public class UserEventListener implements EventListenerProvider {
 
     @Override
     public void onEvent(AdminEvent adminEvent, boolean b) {
-        log.info("Received Keycloak Admin Event: operation={}, resourcePath={}, realm={}", 
+        log.info("Received Keycloak Admin Event: operation={}, resourcePath={}, realm={}",
                 adminEvent.getOperationType(), adminEvent.getResourcePath(), adminEvent.getRealmId());
-        
-        // Handle User Creation via Admin API/UI
-        if ("USER".equals(adminEvent.getResourceType().name()) && "CREATE".equals(adminEvent.getOperationType().name())) {
-            log.info("Admin created a USER. Syncing to Postgres...");
+
+        if ("USER".equals(adminEvent.getResourceType().name())
+                && "CREATE".equals(adminEvent.getOperationType().name())) {
             try {
                 // Resource path for user creation is usually "users/UUID"
                 String resourcePath = adminEvent.getResourcePath();
                 String userId = resourcePath.split("/")[1];
-                
+
                 RealmModel realm = session.realms().getRealm(adminEvent.getRealmId());
                 UserModel user = session.users().getUserById(realm, userId);
 
@@ -82,7 +82,7 @@ public class UserEventListener implements EventListenerProvider {
 
                     String json = mapper.writeValueAsString(payload);
                     log.info("Admin sync: emitting event -> {}", json);
-                    
+
                     if (publisher != null) {
                         publisher.publish(json);
                     }

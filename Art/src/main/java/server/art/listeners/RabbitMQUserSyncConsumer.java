@@ -2,12 +2,10 @@ package server.art.listeners;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "message.broker", havingValue = "rabbitmq")
 public class RabbitMQUserSyncConsumer {
 
     private final UserRegistrationProcessor processor;
@@ -17,7 +15,7 @@ public class RabbitMQUserSyncConsumer {
         log.info("Initialized RabbitMQ User Sync Consumer");
     }
 
-    @RabbitListener(queues = "user-registration-queue")
+    @RabbitListener(queues = "users.user_creation")
     public void receiveMessage(String messageBody) {
         log.info("Received message from RabbitMQ: {}", messageBody);
         try {

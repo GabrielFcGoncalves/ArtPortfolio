@@ -1,4 +1,4 @@
-import Keycloak from 'keycloak-js'
+import Keycloak, { KeycloakInitOptions } from 'keycloak-js'
 import { isAppRoute } from '../lib/path'
 
 const path = typeof window !== 'undefined' ? (window.location.pathname || '/') : '/';
@@ -11,5 +11,17 @@ const keycloak = new Keycloak({
   clientId: 'react',
 });
 
+if (typeof window !== 'undefined') {
+  const originalInit = keycloak.init.bind(keycloak);
+  let initPromise: Promise<boolean> | null = null;
+
+  keycloak.init = (options?: KeycloakInitOptions) => {
+    if (initPromise) {
+      return initPromise;
+    }
+    initPromise = originalInit(options);
+    return initPromise;
+  };
+}
 
 export default keycloak
