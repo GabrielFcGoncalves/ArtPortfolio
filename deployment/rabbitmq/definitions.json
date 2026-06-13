@@ -1,0 +1,56 @@
+{
+  "rabbit_version": "3.13.0",
+  "users": [
+    {
+      "name": "guest",
+      "password_hash": "BM6g97b77vA97nB4pA====",
+      "tags": ["administrator"]
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "guest",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "user.creation",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "users.user_creation",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "source": "user.creation",
+      "vhost": "/",
+      "destination": "users.user_creation",
+      "destination_type": "queue",
+      "routing_key": "user_creation",
+      "arguments": {}
+    }
+  ]
+}

@@ -2,7 +2,7 @@ services:
 
   iam:
     build:
-      context: ../keycloak
+      context: ./keycloak
       dockerfile: Dockerfile
     command: start-dev --import-realm 
     container_name: iam
@@ -43,7 +43,7 @@ services:
 
     volumes:
       - artist_keycloak_data:/opt/keycloak/data
-      - ../keycloak/imports:/opt/keycloak/data/import:ro
+      - ./keycloak/imports:/opt/keycloak/data/import:ro
 
     networks:
       - artist-net
@@ -173,12 +173,16 @@ services:
     image: rabbitmq:3-management
     container_name: artist_os_rabbitmq
     ports:
-      - "5672:5672" # AMQP 0.9.1 / 1.0
-      - "15672:15672" # Management UI
+      - "5672:5672" 
+      - "15672:15672" 
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
-    # Command to enable AMQP 1.0 plugin
+    volumes:
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+    
+
     command: >
       sh -c "rabbitmq-plugins enable rabbitmq_amqp1_0 && rabbitmq-server"
     networks:
