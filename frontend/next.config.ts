@@ -18,6 +18,12 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'img.your-app.com', 
       },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '4566',
+        pathname: '/porfordio-assets/**',
+      },
     ],
   },
   async rewrites() {

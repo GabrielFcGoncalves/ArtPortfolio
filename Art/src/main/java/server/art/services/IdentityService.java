@@ -14,6 +14,7 @@ public class IdentityService {
     }
 
     public String getCurrentUserSub() {
+        System.out.println(getCurrentJwt().getSubject());
         return getCurrentJwt().getSubject();
     }
 

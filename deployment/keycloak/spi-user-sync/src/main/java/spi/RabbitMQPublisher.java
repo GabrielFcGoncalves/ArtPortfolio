@@ -28,9 +28,9 @@ public class RabbitMQPublisher implements EventPublisher {
             this.connection = factory.newConnection();
             this.channel = connection.createChannel();
 
-            // Declare the queue as durable
-            this.channel.queueDeclare(queueName, true, false, false, null);
-            log.info("Successfully connected to RabbitMQ and declared queue: {}", queueName);
+            // Use passive declaration to avoid matching argument mismatches (dlx, TTL, type etc.)
+            this.channel.queueDeclarePassive(queueName);
+            log.info("Successfully connected to RabbitMQ and verified queue: {}", queueName);
         } catch (Exception e) {
             log.error("Failed to initialize RabbitMQ Sender: " + e.getMessage(), e);
         }

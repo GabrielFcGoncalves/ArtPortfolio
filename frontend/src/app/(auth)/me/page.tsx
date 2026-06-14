@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { useKeycloak } from '@react-keycloak/web';
-import Navbar from '@/components/navbar/Navbar';
 import DashboardFooter from '@/components/dashboard/DashboardFooter';
 import { useModals } from '@/providers/ModalProvider';
 import { portfolioService } from '@/services/api_client';
@@ -53,8 +52,6 @@ export default function ProfilePage() {
 
   return (
     <div className="bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container min-h-screen font-body">
-      <Navbar />
-
       <main className="pt-24 pb-32 max-w-7xl mx-auto px-8">
         {/* Visual Identity Section */}
         <ProfileHeader 

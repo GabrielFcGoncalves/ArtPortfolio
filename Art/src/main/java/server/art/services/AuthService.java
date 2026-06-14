@@ -1,6 +1,7 @@
 package server.art.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import server.art.data.User;
@@ -11,6 +12,7 @@ import server.art.repositories.UserRepository;
 
 import java.time.Instant;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -21,12 +23,16 @@ public class AuthService {
     private String keycloakIssuerUri;
 
     public AuthCallbackResponse handleCallback(String keycloakSub, String email, String preferredUsername, String role) {
+        log.info("Auth callback received for user: sub={}, email={}, username={}, role={}", keycloakSub, email, preferredUsername, role);
+        
         User user = userRepository.findByKeycloakId(keycloakSub)
                 .map(existing -> {
+                    log.info("Existing user found in database with ID {}. Updating last login.", existing.getId());
                     existing.setLastLogin(Instant.now());
                     return userRepository.save(existing);
                 })
                 .orElseGet(() -> {
+                    log.info("No existing user found in database. Creating new user record for username: {}", preferredUsername);
                     User newUser = User.builder()
                             .keycloakId(keycloakSub)
                             .email(email)
@@ -34,7 +40,9 @@ public class AuthService {
                             .role(role != null ? role : "USER")
                             .lastLogin(Instant.now())
                             .build();
-                    return userRepository.save(newUser);
+                    User saved = userRepository.save(newUser);
+                    log.info("Successfully created and saved new database user with ID: {}", saved.getId());
+                    return saved;
                 });
 
         return AuthCallbackResponse.builder()

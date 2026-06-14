@@ -1,0 +1,52 @@
+meta {
+  name: Get Current User
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/users/me
+  body: none
+  auth: bearer
+}
+
+vars:pre-request {
+  base_url: http://localhost:8080
+  iam_url: http://localhost:8081
+  realm: platform
+  client_id: react
+  admin_username: platform_admin
+  admin_password: admin
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+script:pre-request {
+  const iamUrl = bru.getVar("iam_url");
+  const realm = bru.getVar("realm");
+  const clientId = bru.getVar("client_id");
+  const username = bru.getVar("admin_username");
+  const password = bru.getVar("admin_password");
+
+  const tokenUrl = `${iamUrl}/realms/${realm}/protocol/openid-connect/token`;
+  
+  const body = `grant_type=password` +
+    `&client_id=${encodeURIComponent(clientId)}` +
+    `&username=${encodeURIComponent(username)}` +
+    `&password=${encodeURIComponent(password)}`;
+  
+  const axios = require("axios");
+  const res = await axios.post(tokenUrl, body, {
+    headers: { "Content-Type": "application/x-www-form-urlencoded" }
+  });
+  
+  const data = res.data;
+  
+  if (!data.access_token) {
+    throw new Error("Failed to obtain token: " + JSON.stringify(data));
+  }
+  
+  bru.setVar("token", data.access_token);
+}

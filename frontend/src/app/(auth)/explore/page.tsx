@@ -1,5 +1,4 @@
 import React from 'react';
-import Navbar from '@/components/navbar/Navbar';
 import FilterBar from '@/components/explore/FilterBar';
 import ArtworkGrid from '@/components/explore/ArtworkGrid';
 import ExploreFooter from '@/components/explore/ExploreFooter';

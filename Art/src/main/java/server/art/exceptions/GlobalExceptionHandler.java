@@ -1,5 +1,6 @@
 package server.art.exceptions;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -11,11 +12,13 @@ import server.art.dto.ApiErrorResponse;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
+        log.warn("Validation error: {}", ex.getMessage());
         List<ApiErrorResponse.FieldError> fieldErrors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -37,6 +40,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(ResourceNotFoundException ex) {
+        log.warn("Resource not found exception: {}", ex.getMessage());
         ApiErrorResponse response = ApiErrorResponse.builder()
                 .error("Not Found")
                 .status(HttpStatus.NOT_FOUND.value())
@@ -48,6 +52,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessLogicException.class)
     public ResponseEntity<ApiErrorResponse> handleBusinessLogic(BusinessLogicException ex) {
+        log.warn("Business logic exception: {}", ex.getMessage());
         ApiErrorResponse response = ApiErrorResponse.builder()
                 .error("Business Logic Error")
                 .status(422)
@@ -59,6 +64,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ApiErrorResponse> handleConflict(ConflictException ex) {
+        log.warn("Conflict exception: {}", ex.getMessage());
         ApiErrorResponse response = ApiErrorResponse.builder()
                 .error("Conflict")
                 .status(HttpStatus.CONFLICT.value())
@@ -70,6 +76,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        log.warn("Access denied exception: {}", ex.getMessage());
         ApiErrorResponse response = ApiErrorResponse.builder()
                 .error("Forbidden")
                 .status(HttpStatus.FORBIDDEN.value())
@@ -81,6 +88,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGenericException(Exception ex) {
+        log.error("An unexpected error occurred: ", ex);
         ApiErrorResponse response = ApiErrorResponse.builder()
                 .error("Internal Server Error")
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())

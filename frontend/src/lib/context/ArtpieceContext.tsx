@@ -110,34 +110,55 @@ export function ArtpieceProvider({ children }: Readonly<{ children: React.ReactN
   }, []);
 
   const submit = useCallback(async () => {
-    // 1. Validation
+
     if (formData.assets.length === 0) throw new Error('At least one file required');
     if (!formData.metadata.title) throw new Error('Title required');
-    
-    // 2. Simulated Storage Upload
-    // Since real Azure Blob storage is not configured yet, 
-    // we simulate generating the blobPaths after the upload.
-    const blobPaths = formData.assets.map(asset => {
-      const sanitizedName = asset.file.name.replaceAll(/\s+/g, '_').toLowerCase();
-      const uniqueId = Math.random().toString(36).substring(2, 8);
-      return `portfolio/pieces/${uniqueId}-${sanitizedName}`;
-    });
+
+
+    const files = formData.assets.map(asset => ({
+      clientFileName: asset.file.name,
+      contentType: asset.file.type
+    }));
 
     // 3. Prepare Payload
     const payload = {
       title: formData.metadata.title,
       description: formData.metadata.description,
       tags: formData.metadata.tags.join(','),
-      blobPaths: blobPaths,
+      files: files,
       isPublished: formData.publish.isPublished
     };
 
     try {
       const result = await portfolioService.createPiece(payload);
+
+      if (result && result.assets) {
+        await Promise.all(
+          formData.assets.map(async (asset, index) => {
+            const matchingAsset = result.assets.find((a: any) => a.sequenceOrder === index) || result.assets[index];
+            if (!matchingAsset || !matchingAsset.uploadUrl) {
+              throw new Error(`No upload URL available for ${asset.file.name}`);
+            }
+
+            const uploadResponse = await fetch(matchingAsset.uploadUrl, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': asset.file.type,
+              },
+              body: asset.file,
+            });
+
+            if (!uploadResponse.ok) {
+              throw new Error(`Storage upload failed for ${asset.file.name}`);
+            }
+          })
+        );
+      }
+
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Atelier Sync Failed:', error);
-      throw new Error('Failed to save your art piece. Please try again.');
+      throw new Error(error.message || 'Failed to save your art piece. Please try again.');
     }
   }, [formData]);
 

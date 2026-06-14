@@ -1,19 +1,22 @@
 package server.art.config;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.amqp.core.Queue;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnProperty(name = "message.broker", havingValue = "rabbitmq")
 public class RabbitMQConfig {
 
-    public static final String QUEUE_NAME = "user-registration-queue";
+    public static final String QUEUE_NAME = "users.user_creation";
 
     @Bean
     public Queue userRegistrationQueue() {
-        // durable = true
-        return new Queue(QUEUE_NAME, true);
+        Map<String, Object> args = new HashMap<>();
+        args.put("x-queue-type", "classic");
+        args.put("x-dead-letter-exchange", "user-registration.dlx");
+        args.put("x-dead-letter-routing-key", "dead-letter");
+        return new Queue(QUEUE_NAME, true, false, false, args);
     }
 }

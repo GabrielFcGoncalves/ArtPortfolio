@@ -32,8 +32,9 @@ public class UserRegistrationProcessor {
             throw new IllegalArgumentException("Invalid payload");
         }
 
+        log.info("Checking database repository for existing user with keycloakId: {}", keycloakId);
         if (userRepository.findByKeycloakId(keycloakId).isPresent()) {
-            log.info("User already exists in Postgres. Skipping creation.");
+            log.info("User with keycloakId: {} already exists in database. Skipping creation.", keycloakId);
             return;
         }
 
@@ -45,7 +46,8 @@ public class UserRegistrationProcessor {
                 .tier("freemium")
                 .build();
 
-        userRepository.save(newUser);
-        log.info("Successfully created Postgres user for Keycloak ID: {}", keycloakId);
+        log.info("Persisting new user to database repository: username={}, email={}", username, email);
+        User savedUser = userRepository.save(newUser);
+        log.info("Successfully persisted user to database. Assigned ID: {}, Keycloak ID: {}", savedUser.getId(), keycloakId);
     }
 }

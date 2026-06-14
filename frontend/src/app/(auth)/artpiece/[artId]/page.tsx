@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
-import Navbar from '@/components/navbar/Navbar';
 import ArtworkCarousel from '@/components/artpiece/ArtworkCarousel';
 import ArtworkDetails from '@/components/artpiece/ArtworkDetails';
 import ActionCard from '@/components/artpiece/ActionCard';
@@ -22,9 +21,6 @@ export default function ArtPiecePage() {
 
   return (
     <div className="bg-surface text-on-surface-variant min-h-screen selection:bg-primary-container selection:text-on-primary-container">
-      {/* Platform Navigation */}
-      <Navbar />
-
       <main className="pt-24 pb-32 max-w-screen-xl mx-auto px-6">
         {/* Visual Presentation */}
         <ArtworkCarousel />

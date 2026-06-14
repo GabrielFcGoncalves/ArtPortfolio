@@ -16,7 +16,7 @@ export function WatermarkPreview({ applyWatermark, watermarkStyle, watermarkOpac
       <div className="aspect-[4/5] relative bg-surface-container-low overflow-hidden shadow-inner group rounded-xl">
         <img 
           className="w-full h-full object-cover" 
-          src={formData.previewUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuAO_y2hP15r63myE2RgbU90-8YOuPwbFTZmROoy73mxLgGUDlZ_fpKx6RJrKJWVKzu4xqk8dZ3r2ZVyf0U5cLeeIVz8alWmHztU_F6h8tgt2vwR2iIDjG9v2X2bQfg4XvRrUec7_QA4B9tdFDSEXYt3dTbcxh2Sg7cZLyTDYYcaBxV5_2JTuW5bCAVLAaExNguI3ZT3hvzlD5Kjpd3BXRy3lyjy5oVr6rH1phaCp6ALjMK4dSZkidWj7ydEXVmptgAuEaBhoLQAw6c"} 
+          src={formData.assets[0]?.previewUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuAO_y2hP15r63myE2RgbU90-8YOuPwbFTZmROoy73mxLgGUDlZ_fpKx6RJrKJWVKzu4xqk8dZ3r2ZVyf0U5cLeeIVz8alWmHztU_F6h8tgt2vwR2iIDjG9v2X2bQfg4XvRrUec7_QA4B9tdFDSEXYt3dTbcxh2Sg7cZLyTDYYcaBxV5_2JTuW5bCAVLAaExNguI3ZT3hvzlD5Kjpd3BXRy3lyjy5oVr6rH1phaCp6ALjMK4dSZkidWj7ydEXVmptgAuEaBhoLQAw6c"} 
           alt="Art preview" 
         />
         

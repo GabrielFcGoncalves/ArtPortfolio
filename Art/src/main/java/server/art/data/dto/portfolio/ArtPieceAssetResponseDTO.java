@@ -10,4 +10,5 @@ public class ArtPieceAssetResponseDTO {
     private UUID id;
     private String blobUrl;
     private int sequenceOrder;
+    private String uploadUrl;
 }

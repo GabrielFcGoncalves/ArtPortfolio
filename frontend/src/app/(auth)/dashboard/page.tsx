@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
-import Navbar from '@/components/navbar/Navbar';
+import React from 'react';
 import DashboardHero from '@/components/dashboard/DashboardHero';
 import FeaturedPieceWithComment from '@/components/dashboard/FeaturedPieceWithComment';
 import ArtworkPriceCard from '@/components/dashboard/ArtworkPriceCard';
@@ -23,9 +22,6 @@ export default function DashboardPage() {
 
   return (
     <div className="bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container min-h-screen font-body overflow-x-hidden">
-      {/* Platform Navigation */}
-      <Navbar />
-
       <main className="pt-20 min-h-screen max-w-[1920px] mx-auto">
         {/* Cinematic Presentation */}
         <DashboardHero />

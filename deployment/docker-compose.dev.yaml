@@ -45,15 +45,16 @@ services:
   #   networks:
   #     - artist-net
 
-  # --- 5. AZURE CLOUD MOCK (Azurite) ---
-  # azure-mock:
-  #   image: mcr.microsoft.com/azure-storage/azurite
-  #   container_name: artist_os_azurite
+  # --- 5. AWS CLOUD MOCK (LocalStack) ---
+  # localstack:
+  #   image: localstack/localstack:latest
+  #   container_name: artist_os_localstack
   #   ports:
-  #     - "10000:10000" # Blob
-  #     - "10001:10001" # Queue
+  #     - "4566:4566"
+  #   environment:
+  #     - SERVICES=s3
   #   volumes:
-  #     - azurite_data:/data
+  #     - localstack_data:/var/lib/localstack
   #   networks:
   #     - artist-net
 
@@ -108,7 +109,7 @@ services:
   #     - db-nosql
   #     - cache
   #     - iam
-  #     - azure-mock
+  #     - localstack
   #   environment:
   #     # Database Connections
   #     SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
@@ -172,5 +173,4 @@ networks:
 # volumes:
 #   pgdata:
 #   mongodata:
-#   azurite_data:
-#   azurite_data:
+#   localstack_data:
