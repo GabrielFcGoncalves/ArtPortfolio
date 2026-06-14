@@ -11,4 +11,5 @@ public class ArtPieceAssetResponseDTO {
     private String blobUrl;
     private int sequenceOrder;
     private String uploadUrl;
+    private String downloadUrl;
 }

@@ -57,3 +57,6 @@ aws:
     bucket: ${AWS_S3_BUCKET}
     endpoint: ${AWS_S3_ENDPOINT}
     url-base: ${AWS_S3_URL_BASE}
+
+imgproxy:
+  url: ${IMGPROXY_URL}

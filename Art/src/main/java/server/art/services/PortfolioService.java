@@ -40,6 +40,9 @@ public class PortfolioService {
     @Value("${aws.s3.url-base}")
     private String s3UrlBase;
 
+    @Value("${imgproxy.url}")
+    private String imgproxyUrl;
+
     public PaginatedResponse<ArtPieceResponseDTO> getPortfolio(UUID userId, int page, int limit) {
         PageRequest pageRequest = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
         Page<ArtPiece> piecesPage = artPieceRepository.findByUserIdAndIsPublishedTrue(userId, pageRequest);
@@ -66,6 +69,7 @@ public class PortfolioService {
                                     .id(a.getId())
                                     .blobUrl(a.getBlobUrl() != null ? a.getBlobUrl() : "")
                                     .sequenceOrder(a.getSequenceOrder())
+                                    .downloadUrl(generatePresignedGetUrl(a.getBlobPath()))
                                     .build())
                             .toList();
                     ArtPieceAsset cover = piece.getCoverImage();
@@ -73,7 +77,7 @@ public class PortfolioService {
                             .id(piece.getId())
                             .title(piece.getTitle())
                             .description(piece.getDescription() != null ? piece.getDescription() : "")
-                            .coverImage(cover != null ? cover.getBlobUrl() : "")
+                            .coverImage(cover != null ? generatePresignedGetUrl(cover.getBlobPath()) : "")
                             .assetCount(piece.getAssetCount())
                             .createdAt(piece.getCreatedAt().toString())
                             .assets(assetDTOs)
@@ -129,6 +133,7 @@ public class PortfolioService {
                         .blobUrl(a.getBlobUrl())
                         .sequenceOrder(a.getSequenceOrder())
                         .uploadUrl(generatePresignedUrl(a.getBlobPath(), a.getFileType()))
+                        .downloadUrl(generatePresignedGetUrl(a.getBlobPath()))
                         .build())
                 .toList();
 
@@ -162,9 +167,18 @@ public class PortfolioService {
 
             return presignedRequest.url().toString();
         } catch (Exception e) {
-            log.error("Failed to generate presigned S3 upload URL for key: {}, contentType: {}", blobPath, contentType, e);
+            log.error("Failed to generate presigned S3 upload URL for key: {}, contentType: {}", blobPath, contentType,
+                    e);
             return "";
         }
+    }
+
+    public String generatePresignedGetUrl(String blobPath) {
+        if (blobPath == null || blobPath.isBlank()) {
+            return "";
+        }
+        return String.format("%s/insecure/resize:fill:400:300/plain/s3://%s/%s@webp",
+                imgproxyUrl, bucketName, blobPath);
     }
 
     @Transactional

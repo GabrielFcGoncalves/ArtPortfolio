@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 
 export interface ArtPiece {
   id: string;
@@ -17,12 +16,11 @@ interface ArtPieceCardProps {
 
 const ArtPieceCard: React.FC<Readonly<ArtPieceCardProps>> = ({ piece }) => {
   const coverImageContent = piece.coverImage ? (
-    <Image 
-      fill
-      className="object-cover group-hover:scale-110 transition-transform duration-700 grayscale-[0.2] group-hover:grayscale-0"
+    <img 
       src={piece.coverImage}
-      alt={piece.title}
-      sizes="(max-width: 768px) 100vw, 33vw"
+      alt={piece.title || "Art Piece"}
+      loading="lazy"
+      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 grayscale-[0.2] group-hover:grayscale-0"
     />
   ) : (
     <div className="w-full h-full flex items-center justify-center bg-primary/5">

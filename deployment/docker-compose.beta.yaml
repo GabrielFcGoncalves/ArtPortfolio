@@ -96,6 +96,7 @@ services:
       AWS_S3_URL_BASE: ${AWS_S3_URL_BASE}
       AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
       AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      IMGPROXY_URL: ${IMGPROXY_URL}
     extra_hosts:
       - "localhost:host-gateway"
     networks:
@@ -197,6 +198,23 @@ services:
       - artist-net
 
 
+  imgproxy:
+    image: darthsim/imgproxy:latest
+    container_name: artist_os_imgproxy
+    environment:
+      IMGPROXY_BIND: ${IMGPROXY_BIND}
+      IMGPROXY_INSECURE_ENDPOINT: ${IMGPROXY_INSECURE_ENDPOINT} 
+      IMGPROXY_USE_S3: true
+      IMGPROXY_S3_ENDPOINT: http://artist_os_localstack:4566 
+      IMGPROXY_S3_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      IMGPROXY_INSECURE_ADDRESS_ALLOWED: true
+    
+    ports:
+      - "8082:8081"
+    networks:
+      - artist-net
 
 
 networks:
