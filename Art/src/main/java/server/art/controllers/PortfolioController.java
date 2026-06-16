@@ -11,10 +11,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import server.art.data.ArtPiece;
 import server.art.data.dto.portfolio.*;
 import server.art.data.dto.common.*;
 import server.art.dto.PaginatedResponse;
 import server.art.services.PortfolioService;
+import java.util.Optional;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,11 +35,36 @@ public class PortfolioController {
         return ResponseEntity.ok(portfolioService.getPortfolio(userId, page, limit));
     }
 
+    @GetMapping("/api/users/{userId}/portfolio/{pieceId}")
+    public ResponseEntity<ArtPieceResponseDTO> getArtwork(
+            @PathVariable UUID userId,
+            @PathVariable UUID pieceId,
+            @RequestParam(required = false) Integer width,
+            @RequestParam(required = false) Integer height) {
+        return ResponseEntity.ok(portfolioService.getArtwork(pieceId, width, height));
+    }
+
+    @GetMapping("/api/portfolio/{pieceId}")
+    public ResponseEntity<ArtPieceResponseDTO> getArtworkById(
+            @PathVariable UUID pieceId,
+            @RequestParam(required = false) Integer width,
+            @RequestParam(required = false) Integer height) {
+        return ResponseEntity.ok(portfolioService.getArtworkById(pieceId, width, height));
+    }
+
     @GetMapping("/api/users/me/portfolio")
     public ResponseEntity<PaginatedResponse<ArtPieceResponseDTO>> getMyPortfolio(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int limit) {
         return ResponseEntity.ok(portfolioService.getMyPortfolio(page, limit));
+    }
+
+    @GetMapping("/api/users/me/portfolio/{pieceId}")
+    public ResponseEntity<ArtPieceResponseDTO> getMyArtwork(
+            @PathVariable UUID pieceId,
+            @RequestParam(required = false) Integer width,
+            @RequestParam(required = false) Integer height) {
+        return ResponseEntity.ok(portfolioService.getMyArtwork(pieceId, width, height));
     }
 
     @PostMapping("/api/users/me/portfolio")
@@ -55,7 +82,7 @@ public class PortfolioController {
 
     @PatchMapping("/api/users/me/portfolio/{pieceId}")
     public ResponseEntity<SimpleMessageResponseDTO> updatePiece(
-            @PathVariable UUID pieceId, 
+            @PathVariable UUID pieceId,
             @RequestBody ArtPieceUpdateRequestDTO request) {
         return ResponseEntity.ok(portfolioService.updatePiece(pieceId, request));
     }

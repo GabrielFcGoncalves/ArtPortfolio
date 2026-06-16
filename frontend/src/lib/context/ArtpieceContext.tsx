@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { portfolioService } from '@/services/api_client';
 
 // Define the interface for Artpiece Form Data
@@ -65,6 +65,40 @@ export function ArtpieceProvider({ children }: Readonly<{ children: React.ReactN
     }
   });
 
+  const isSubmittedRef = useRef(false);
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedDraft = localStorage.getItem('porfordio_artpiece_draft');
+      if (savedDraft) {
+        try {
+          const parsed = JSON.parse(savedDraft);
+          setFormData(prev => ({
+            ...prev,
+            metadata: parsed.metadata || prev.metadata,
+            protection: parsed.protection || prev.protection,
+            publish: parsed.publish ? { ...parsed.publish, isPublished: true } : prev.publish,
+          }));
+        } catch (e) {
+          console.error('Failed to parse artpiece draft from localStorage', e);
+        }
+      }
+    }
+  }, []);
+
+  // Save draft to localStorage on changes, unless submitted
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isSubmittedRef.current) {
+      const draftData = {
+        metadata: formData.metadata,
+        protection: formData.protection,
+        publish: formData.publish,
+      };
+      localStorage.setItem('porfordio_artpiece_draft', JSON.stringify(draftData));
+    }
+  }, [formData.metadata, formData.protection, formData.publish]);
+
   const updateField = useCallback((path: string, value: any) => {
     setFormData(prev => {
       const keys = path.split('.');
@@ -126,10 +160,11 @@ export function ArtpieceProvider({ children }: Readonly<{ children: React.ReactN
       description: formData.metadata.description,
       tags: formData.metadata.tags.join(','),
       files: files,
-      isPublished: formData.publish.isPublished
+      isPublished: true
     };
 
     try {
+      isSubmittedRef.current = true;
       const result = await portfolioService.createPiece(payload);
 
       if (result && result.assets) {
@@ -155,8 +190,12 @@ export function ArtpieceProvider({ children }: Readonly<{ children: React.ReactN
         );
       }
 
+      // Clear draft on successful completion
+      localStorage.removeItem('porfordio_artpiece_draft');
+
       return result;
     } catch (error: any) {
+      isSubmittedRef.current = false;
       console.error('Atelier Sync Failed:', error);
       throw new Error(error.message || 'Failed to save your art piece. Please try again.');
     }

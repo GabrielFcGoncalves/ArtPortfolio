@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 export interface ArtPiece {
   id: string;
@@ -29,7 +30,7 @@ const ArtPieceCard: React.FC<Readonly<ArtPieceCardProps>> = ({ piece }) => {
   );
 
   return (
-    <div className="group cursor-pointer">
+    <Link href={`/artpiece/${piece.id}`} className="group cursor-pointer block">
       <div className="aspect-square rounded-2xl overflow-hidden bg-surface-container-high relative mb-4 border border-outline-variant/10 shadow-sm">
         {coverImageContent}
         {!piece.isPublished && (
@@ -42,7 +43,7 @@ const ArtPieceCard: React.FC<Readonly<ArtPieceCardProps>> = ({ piece }) => {
       <p className="text-[10px] text-outline font-bold uppercase tracking-widest mt-1">
         {new Date(piece.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
       </p>
-    </div>
+    </Link>
   );
 };
 

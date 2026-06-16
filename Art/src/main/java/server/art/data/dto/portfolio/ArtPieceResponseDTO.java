@@ -25,8 +25,16 @@ public class ArtPieceResponseDTO {
     @JsonProperty("user_id")
     private UUID userId;
     
+    @JsonProperty("keycloak_id")
+    private String keycloakId;
+    
     @JsonProperty("is_published")
     private boolean isPublished;
     
     private List<ArtPieceAssetResponseDTO> assets;
+
+    @JsonProperty("is_published")
+    public boolean isPublished() {
+        return isPublished;
+    }
 }

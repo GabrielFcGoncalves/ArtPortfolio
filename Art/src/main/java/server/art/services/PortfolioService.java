@@ -20,8 +20,11 @@ import server.art.repositories.UserRepository;
 
 import org.springframework.beans.factory.annotation.Value;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+
+import org.springframework.security.access.AccessDeniedException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -43,6 +46,7 @@ public class PortfolioService {
     @Value("${imgproxy.url}")
     private String imgproxyUrl;
 
+    @Transactional(readOnly = true)
     public PaginatedResponse<ArtPieceResponseDTO> getPortfolio(UUID userId, int page, int limit) {
         PageRequest pageRequest = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
         Page<ArtPiece> piecesPage = artPieceRepository.findByUserIdAndIsPublishedTrue(userId, pageRequest);
@@ -50,39 +54,110 @@ public class PortfolioService {
         return mapToPaginatedResponse(piecesPage, page, limit);
     }
 
+    @Transactional(readOnly = true)
+    public ArtPieceResponseDTO getArtwork(UUID pieceId) {
+        return getArtwork(pieceId, 400, 300);
+    }
+
+    @Transactional(readOnly = true)
+    public ArtPieceResponseDTO getArtwork(UUID pieceId, Integer width, Integer height) {
+        ArtPiece piece = artPieceRepository.findById(pieceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Portfolio piece not found: " + pieceId));
+
+        return mapToResponseDTO(piece, true, width, height);
+    }
+
+    @Transactional(readOnly = true)
+    public ArtPieceResponseDTO getMyArtwork(UUID pieceId) {
+        return getMyArtwork(pieceId, 400, 300);
+    }
+
+    @Transactional(readOnly = true)
+    public ArtPieceResponseDTO getMyArtwork(UUID pieceId, Integer width, Integer height) {
+        User user = getCurrentUser();
+        ArtPiece piece = getOwnedPiece(pieceId, user);
+        return mapToResponseDTO(piece, true, width, height);
+    }
+
+    @Transactional(readOnly = true)
+    public ArtPieceResponseDTO getArtworkById(UUID pieceId) {
+        return getArtworkById(pieceId, 400, 300);
+    }
+
+    @Transactional(readOnly = true)
+    public ArtPieceResponseDTO getArtworkById(UUID pieceId, Integer width, Integer height) {
+        ArtPiece piece = artPieceRepository.findById(pieceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Portfolio piece not found: " + pieceId));
+
+        // If it's a draft, verify ownership
+        if (!piece.isPublished()) {
+            User currentUser = getCurrentUser();
+            if (!piece.getUser().getId().equals(currentUser.getId())) {
+                throw new AccessDeniedException("Unauthorized: This artwork is a draft.");
+            }
+        }
+
+        return mapToResponseDTO(piece, true, width, height);
+    }
+
+    @Transactional(readOnly = true)
     public PaginatedResponse<ArtPieceResponseDTO> getMyPortfolio(int page, int limit) {
         User user = getCurrentUser();
         PageRequest pageRequest = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
-        // For 'me', we might want to see both published and unpublished
         Page<ArtPiece> piecesPage = artPieceRepository.findByUserId(user.getId(), pageRequest);
 
         return mapToPaginatedResponse(piecesPage, page, limit);
     }
 
+    private ArtPieceResponseDTO mapToResponseDTO(ArtPiece piece, boolean includeAllAssets) {
+        return mapToResponseDTO(piece, includeAllAssets, 400, 300);
+    }
+
+    private ArtPieceResponseDTO mapToResponseDTO(ArtPiece piece, boolean includeAllAssets, Integer width, Integer height) {
+        int w = width != null ? width : 400;
+        int h = height != null ? height : 300;
+        ArtPieceAsset cover = piece.getCoverImage();
+        List<ArtPieceAssetResponseDTO> assetDTOs;
+
+        if (includeAllAssets) {
+            List<ArtPieceAsset> assets = piece.getAssets();
+            assetDTOs = assets.stream()
+                    .map(a -> ArtPieceAssetResponseDTO.builder()
+                            .id(a.getId())
+                            .blobUrl(a.getBlobUrl() != null ? a.getBlobUrl() : "")
+                            .sequenceOrder(a.getSequenceOrder())
+                            .downloadUrl(generatePresignedGetUrl(a.getBlobPath(), w, h))
+                            .build())
+                    .toList();
+        } else {
+            assetDTOs = cover != null
+                    ? List.of(ArtPieceAssetResponseDTO.builder()
+                            .id(cover.getId())
+                            .blobUrl(cover.getBlobUrl() != null ? cover.getBlobUrl() : "")
+                            .sequenceOrder(cover.getSequenceOrder())
+                            .downloadUrl(generatePresignedGetUrl(cover.getBlobPath(), w, h))
+                            .build())
+                    : List.of();
+        }
+
+        return ArtPieceResponseDTO.builder()
+                .id(piece.getId())
+                .title(piece.getTitle())
+                .description(piece.getDescription() != null ? piece.getDescription() : "")
+                .coverImage(cover != null ? generatePresignedGetUrl(cover.getBlobPath(), w, h) : "")
+                .assetCount(piece.getAssetCount())
+                .createdAt(piece.getCreatedAt().toString())
+                .isPublished(piece.isPublished())
+                .userId(piece.getUser().getId())
+                .keycloakId(piece.getUser().getKeycloakId())
+                .assets(assetDTOs)
+                .build();
+    }
+
     private PaginatedResponse<ArtPieceResponseDTO> mapToPaginatedResponse(Page<ArtPiece> piecesPage, int page,
             int limit) {
         List<ArtPieceResponseDTO> data = piecesPage.getContent().stream()
-                .map(piece -> {
-                    List<ArtPieceAsset> assets = piece.getAssets();
-                    List<ArtPieceAssetResponseDTO> assetDTOs = assets.stream()
-                            .map(a -> ArtPieceAssetResponseDTO.builder()
-                                    .id(a.getId())
-                                    .blobUrl(a.getBlobUrl() != null ? a.getBlobUrl() : "")
-                                    .sequenceOrder(a.getSequenceOrder())
-                                    .downloadUrl(generatePresignedGetUrl(a.getBlobPath()))
-                                    .build())
-                            .toList();
-                    ArtPieceAsset cover = piece.getCoverImage();
-                    return ArtPieceResponseDTO.builder()
-                            .id(piece.getId())
-                            .title(piece.getTitle())
-                            .description(piece.getDescription() != null ? piece.getDescription() : "")
-                            .coverImage(cover != null ? generatePresignedGetUrl(cover.getBlobPath()) : "")
-                            .assetCount(piece.getAssetCount())
-                            .createdAt(piece.getCreatedAt().toString())
-                            .assets(assetDTOs)
-                            .build();
-                })
+                .map(piece -> mapToResponseDTO(piece, false))
                 .toList();
 
         return PaginatedResponse.of(data, piecesPage.getTotalElements(), page, limit);
@@ -141,6 +216,7 @@ public class PortfolioService {
                 .id(saved.getId())
                 .title(saved.getTitle())
                 .userId(user.getId())
+                .keycloakId(user.getKeycloakId())
                 .isPublished(saved.isPublished())
                 .createdAt(saved.getCreatedAt().toString())
                 .assets(assetDTOs)
@@ -174,11 +250,15 @@ public class PortfolioService {
     }
 
     public String generatePresignedGetUrl(String blobPath) {
+        return generatePresignedGetUrl(blobPath, 400, 300);
+    }
+
+    public String generatePresignedGetUrl(String blobPath, int width, int height) {
         if (blobPath == null || blobPath.isBlank()) {
             return "";
         }
-        return String.format("%s/insecure/resize:fill:400:300/plain/s3://%s/%s@webp",
-                imgproxyUrl, bucketName, blobPath);
+        return String.format("%s/insecure/resize:fill:%d:%d/plain/s3://%s/%s@webp",
+                imgproxyUrl, width, height, bucketName, blobPath);
     }
 
     @Transactional

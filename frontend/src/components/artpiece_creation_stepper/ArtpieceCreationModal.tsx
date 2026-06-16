@@ -63,6 +63,16 @@ function ArtpieceCreationModalContent({ onClose }: ArtpieceCreationModalProps) {
     }
   };
 
+  const handleClose = () => {
+    const draftData = {
+      metadata: formData.metadata,
+      protection: formData.protection,
+      publish: formData.publish
+    };
+    localStorage.setItem('porfordio_artpiece_draft', JSON.stringify(draftData));
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-on-surface/40 backdrop-blur-sm p-4 md:p-8">
       {/* Modal Container */}
@@ -71,7 +81,7 @@ function ArtpieceCreationModalContent({ onClose }: ArtpieceCreationModalProps) {
           initialStep={1}
           title="Add New Art Piece"
           subtitle="Digital Atelier Asset Management"
-          onClose={onClose}
+          onClose={handleClose}
           validateStep={validateStep}
           onBeforeComplete={handlePublish}
           onFinalStepCompleted={onClose}

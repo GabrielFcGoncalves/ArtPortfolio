@@ -16,6 +16,37 @@ export const portfolioService = {
     return data;
   },
 
+  /** 
+   * Fetch the details for an artwork of a specific user.
+   */
+  getArtwork: async (userId: string, pieceId: string, width?: number, height?: number) => {
+    const { data } = await apiClient.get(`/users/${userId}/portfolio/${pieceId}`, {
+      params: { width, height }
+    });
+    return data;
+  },
+
+  /** 
+   * Fetch the details for an artwork owned by the current logged-in user.
+   */
+  getMyArtwork: async (pieceId: string, width?: number, height?: number) => {
+    const { data } = await apiClient.get(`/users/me/portfolio/${pieceId}`, {
+      params: { width, height }
+    });
+    return data;
+  },
+
+  /**
+   * Fetch the details for an artwork by its piece ID alone.
+   */
+  getArtworkById: async (pieceId: string, width?: number, height?: number) => {
+    const { data } = await apiClient.get(`/portfolio/${pieceId}`, {
+      params: { width, height }
+    });
+    return data;
+  },
+
+
   /**
    * Create a new art piece from the Atelier creation stepper.
    */

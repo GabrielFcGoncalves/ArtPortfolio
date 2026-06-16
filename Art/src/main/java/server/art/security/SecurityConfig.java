@@ -39,6 +39,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/webhooks/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users/{id}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users/{id}/portfolio").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/users/{id}/portfolio/{pieceId}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/portfolio/{pieceId}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users/{id}/followers").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users/{id}/following").permitAll()
                 // Admin endpoints
