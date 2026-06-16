@@ -7,18 +7,46 @@ export interface User {
   roles: string[];
 }
 
-export type CommissionStatus = 'PENDING' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+export type CommissionStatus = 'REQUESTED' | 'IN_PROGRESS' | 'REVIEW' | 'COMPLETED' | 'CANCELLED' | 'REFUNDED' | 'PAID';
 
 export interface Commission {
   id: string;
-  artistId: string;
-  clientId: string;
   title: string;
   description: string;
-  price: number;
   status: CommissionStatus;
-  createdAt: string;
-  updatedAt: string;
+  total_price_cents: number;
+  client_id: string;
+  client_username: string;
+  artist_id: string;
+  artist_username: string;
+  created_at: string;
+  reference_image_urls?: string[];
+  milestones?: CommissionMilestone[];
+}
+
+export interface CommissionSummary {
+  id: string;
+  title: string;
+  status: string;
+  client_username: string;
+  artist_username: string;
+  total_price_cents: number;
+  created_at: string;
+}
+
+export interface CommissionMilestone {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  order_index: number;
+}
+
+export interface CommissionCreateRequest {
+  artist_id: string;
+  title: string;
+  description: string;
+  reference_image_urls?: string[];
 }
 
 export interface ArtPiece {

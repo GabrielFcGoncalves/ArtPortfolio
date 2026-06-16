@@ -5,14 +5,23 @@ import { AppProvider } from '@/providers/AppProvider';
 import Navbar from '@/components/navbar/Navbar';
 import { ModalProvider, useModals } from '@/providers/ModalProvider';
 import ArtpieceCreationModal from '@/components/artpiece_creation_stepper/ArtpieceCreationModal';
+import CommissionRequestModal from '@/components/commissions/CommissionRequestModal';
 
 function GlobalModals() {
-  const { isArtpieceModalOpen, closeArtpieceModal } = useModals();
+  const { isArtpieceModalOpen, closeArtpieceModal, isCommissionModalOpen, commissionTarget, closeCommissionModal } = useModals();
   return (
-    <ArtpieceCreationModal 
-      isOpen={isArtpieceModalOpen} 
-      onClose={closeArtpieceModal} 
-    />
+    <>
+      <ArtpieceCreationModal 
+        isOpen={isArtpieceModalOpen} 
+        onClose={closeArtpieceModal} 
+      />
+      <CommissionRequestModal
+        isOpen={isCommissionModalOpen}
+        onClose={closeCommissionModal}
+        artistId={commissionTarget?.artistId || ''}
+        artistUsername={commissionTarget?.artistUsername || ''}
+      />
+    </>
   );
 }
 

@@ -10,6 +10,7 @@ import ArtistNotes from '@/components/artpiece/ArtistNotes';
 import CollectorCommunity from '@/components/artpiece/CollectorCommunity';
 import ArtPieceFooter from '@/components/artpiece/ArtPieceFooter';
 import { portfolioService } from '@/services/api_client';
+import { useModals } from '@/providers/ModalProvider';
 
 /**
  * ArtPiecePage component.
@@ -19,6 +20,7 @@ export default function ArtPiecePage() {
   const { artId } = useParams();
   const router = useRouter();
   const { keycloak, initialized } = useKeycloak();
+  const { openCommissionModal } = useModals();
   
   const [artPiece, setArtPiece] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -109,6 +111,13 @@ export default function ArtPiecePage() {
     setIsEditing(false);
   };
 
+  const handleRequestCommission = () => {
+    // Use the artwork owner's user_id and username to open the commission modal
+    const artistId = pieceData.user_id || pieceData.userId || '';
+    const artistUsername = pieceData.username || pieceData.artist_username || 'this artist';
+    openCommissionModal(artistId, artistUsername);
+  };
+
   return (
     <div className="bg-surface text-on-surface-variant min-h-screen selection:bg-primary-container selection:text-on-primary-container">
       <main className="pt-24 pb-32 max-w-screen-xl mx-auto px-6">
@@ -138,6 +147,7 @@ export default function ArtPiecePage() {
             onSave={handleSave}
             onCancel={handleCancel}
             isSaving={isSaving}
+            onRequestCommission={!isOwner ? handleRequestCommission : undefined}
           />
         </div>
 

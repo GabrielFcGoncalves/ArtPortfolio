@@ -7,6 +7,7 @@ export interface NavLink {
 export const AUTH_NAV_LINKS: NavLink[] = [
   { label: "Explore", href: "/explore" },
   { label: "Studio", href: "/dashboard" },
+  { label: "Commissions", href: "/commissions" },
 ];
 
 export const LANDING_NAV_LINKS: NavLink[] = [

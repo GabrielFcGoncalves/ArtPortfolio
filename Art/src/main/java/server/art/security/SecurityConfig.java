@@ -37,6 +37,7 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers(HttpMethod.POST, "/api/auth/callback").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/webhooks/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/users/search").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users/{id}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users/{id}/portfolio").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users/{id}/portfolio/{pieceId}").permitAll()

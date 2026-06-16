@@ -45,6 +45,22 @@ public class CommissionController {
         return ResponseEntity.ok(commissionService.updateCommission(id, request));
     }
 
+    @PostMapping("/{id}/accept")
+    public ResponseEntity<CommissionDetailResponseDTO> acceptCommission(@PathVariable UUID id) {
+        return ResponseEntity.ok(commissionService.acceptCommission(id));
+    }
+
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<SimpleMessageResponseDTO> rejectCommission(
+            @PathVariable UUID id,
+            @RequestBody CommissionCancelRequestDTO request) {
+        commissionService.rejectCommission(id, request.getReason());
+        return ResponseEntity.ok(SimpleMessageResponseDTO.builder()
+                .success(true)
+                .message("Commission rejected")
+                .build());
+    }
+
     @PostMapping("/{id}/cancel")
     public ResponseEntity<SimpleMessageResponseDTO> cancelCommission(
             @PathVariable UUID id, 

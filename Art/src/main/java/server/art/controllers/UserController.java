@@ -101,4 +101,9 @@ public class UserController {
                 .message("User unblocked")
                 .build());
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<java.util.List<server.art.dto.user.UserPublicResponse>> searchUsers(@RequestParam String query) {
+        return ResponseEntity.ok(userService.searchUsers(query));
+    }
 }

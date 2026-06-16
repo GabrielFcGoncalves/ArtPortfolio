@@ -3,6 +3,7 @@ package server.art.data.enums;
 public enum NotificationType {
     COMMISSION_REQUESTED,
     COMMISSION_ACCEPTED,
+    COMMISSION_REJECTED,
     COMMISSION_CANCELLED,
     MILESTONE_SUBMITTED,
     MILESTONE_APPROVED,

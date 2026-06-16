@@ -214,6 +214,15 @@ public class UserService {
         blockedUserRepository.deleteByBlockerIdAndBlockedId(currentUser.getId(), targetUserId);
     }
 
+    public java.util.List<UserPublicResponse> searchUsers(String query) {
+        if (query == null || query.isBlank()) {
+            return java.util.Collections.emptyList();
+        }
+        return userRepository.findByUsernameContainingIgnoreCase(query).stream()
+                .map(this::mapToPublicResponse)
+                .collect(Collectors.toList());
+    }
+
     // --- Mappers ---
 
     private UserPublicResponse mapToPublicResponse(User user) {

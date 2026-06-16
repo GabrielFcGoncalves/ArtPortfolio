@@ -1,4 +1,5 @@
 import apiClient from './apiClient';
+import type { Commission, CommissionSummary, CommissionCreateRequest } from '@/types';
 
 /**
  * CommissionService
@@ -6,36 +7,62 @@ import apiClient from './apiClient';
  */
 export const commissionService = {
   /**
-   * Get all commissions for the current user.
+   * Get paginated commissions for the current user.
+   * @param role - 'ARTIST' | 'CLIENT' | undefined (both)
+   * @param status - Filter by commission status or 'all'
    */
-  getCommissions: async () => {
-    const { data } = await apiClient.get('/commissions');
-    return data;
-  },
-
-  /**
-   * Fetch the current live work-in-progress queue.
-   */
-  getLiveQueue: async (artistId?: string) => {
-    const { data } = await apiClient.get('/commissions/queue', {
-      params: { artistId }
+  getCommissions: async (role?: string, status?: string, page = 1, limit = 20) => {
+    const { data } = await apiClient.get('/commissions', {
+      params: { role, status, page, limit }
     });
     return data;
   },
 
   /**
-   * Post a new commission request.
+   * Get a single commission's full detail.
    */
-  requestCommission: async (artistId: string, requestData: any) => {
-    const { data } = await apiClient.post(`/commissions/request/${artistId}`, requestData);
+  getCommissionDetail: async (commissionId: string): Promise<Commission> => {
+    const { data } = await apiClient.get(`/commissions/${commissionId}`);
     return data;
   },
 
   /**
-   * Artist: Accept or decline a pending commission.
+   * Submit a new commission request to an artist.
    */
-  updateCommissionStatus: async (commissionId: string, status: 'ACCEPTED' | 'DECLINED' | 'IN_PROGRESS' | 'COMPLETED') => {
-    const { data } = await apiClient.patch(`/commissions/${commissionId}/status`, { status });
+  createCommission: async (request: CommissionCreateRequest): Promise<Commission> => {
+    const { data } = await apiClient.post('/commissions', request);
+    return data;
+  },
+
+  /**
+   * Artist: Accept a pending commission.
+   */
+  acceptCommission: async (commissionId: string): Promise<Commission> => {
+    const { data } = await apiClient.post(`/commissions/${commissionId}/accept`);
+    return data;
+  },
+
+  /**
+   * Artist: Reject a pending commission.
+   */
+  rejectCommission: async (commissionId: string, reason?: string) => {
+    const { data } = await apiClient.post(`/commissions/${commissionId}/reject`, { reason });
+    return data;
+  },
+
+  /**
+   * Cancel an existing commission.
+   */
+  cancelCommission: async (commissionId: string, reason?: string) => {
+    const { data } = await apiClient.post(`/commissions/${commissionId}/cancel`, { reason });
+    return data;
+  },
+
+  /**
+   * Update a commission's metadata.
+   */
+  updateCommission: async (commissionId: string, updates: { title?: string; description?: string }) => {
+    const { data } = await apiClient.patch(`/commissions/${commissionId}`, updates);
     return data;
   }
 };

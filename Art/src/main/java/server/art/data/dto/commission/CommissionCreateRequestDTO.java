@@ -3,10 +3,16 @@ package server.art.data.dto.commission;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+import java.util.List;
 import java.util.UUID;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CommissionCreateRequestDTO {
     @JsonProperty("artist_id")
     private UUID artistId;
@@ -15,7 +21,8 @@ public class CommissionCreateRequestDTO {
     private String description;
     
     @JsonProperty("total_price_cents")
-    private long totalPriceCents;
+    @Builder.Default
+    private long totalPriceCents = 0;
     
     @JsonProperty("is_physical")
     private boolean isPhysical;
@@ -26,4 +33,7 @@ public class CommissionCreateRequestDTO {
     
     @JsonProperty("due_date")
     private String dueDate;
+
+    @JsonProperty("reference_image_urls")
+    private List<String> referenceImageUrls;
 }

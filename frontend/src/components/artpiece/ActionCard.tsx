@@ -8,6 +8,7 @@ interface ActionCardProps {
   onSave?: () => void;
   onCancel?: () => void;
   isSaving?: boolean;
+  onRequestCommission?: () => void;
 }
 
 export default function ActionCard({
@@ -17,7 +18,8 @@ export default function ActionCard({
   onDelete,
   onSave,
   onCancel,
-  isSaving
+  isSaving,
+  onRequestCommission
 }: Readonly<ActionCardProps>) {
   if (isOwner) {
     return (
@@ -98,6 +100,15 @@ export default function ActionCard({
             <span className="material-symbols-outlined">mail</span>
             Inquire via Message
           </button>
+          {onRequestCommission && (
+            <button
+              onClick={onRequestCommission}
+              className="w-full py-4 bg-secondary text-on-secondary rounded-lg font-bold tracking-tight hover:opacity-90 transition-all shadow-sm flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined">palette</span>
+              Request Commission
+            </button>
+          )}
         </div>
 
         <div className="pt-6 border-t border-outline-variant/20 space-y-4">
