@@ -55,6 +55,13 @@ public class PortfolioService {
     }
 
     @Transactional(readOnly = true)
+    public PaginatedResponse<ArtPieceResponseDTO> getAllArtworks(int page, int limit) {
+        PageRequest pageRequest = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
+        Page<ArtPiece> piecesPage = artPieceRepository.findByIsPublishedTrue(pageRequest);
+        return mapToPaginatedResponse(piecesPage, page, limit);
+    }
+
+    @Transactional(readOnly = true)
     public ArtPieceResponseDTO getArtwork(UUID pieceId) {
         return getArtwork(pieceId, 400, 300);
     }
@@ -150,6 +157,11 @@ public class PortfolioService {
                 .isPublished(piece.isPublished())
                 .userId(piece.getUser().getId())
                 .keycloakId(piece.getUser().getKeycloakId())
+                .username(piece.getUser().getUsername())
+                .artistAvatarUrl(piece.getUser().getAvatarUrl())
+                .isForSale(piece.isForSale())
+                .price(piece.getPrice())
+                .currency(piece.getCurrency())
                 .assets(assetDTOs)
                 .build();
     }
@@ -217,8 +229,13 @@ public class PortfolioService {
                 .title(saved.getTitle())
                 .userId(user.getId())
                 .keycloakId(user.getKeycloakId())
+                .username(user.getUsername())
+                .artistAvatarUrl(user.getAvatarUrl())
                 .isPublished(saved.isPublished())
                 .createdAt(saved.getCreatedAt().toString())
+                .isForSale(saved.isForSale())
+                .price(saved.getPrice())
+                .currency(saved.getCurrency())
                 .assets(assetDTOs)
                 .build();
     }

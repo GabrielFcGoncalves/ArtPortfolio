@@ -9,6 +9,9 @@ interface ActionCardProps {
   onCancel?: () => void;
   isSaving?: boolean;
   onRequestCommission?: () => void;
+  isForSale?: boolean;
+  price?: number;
+  currency?: string;
 }
 
 export default function ActionCard({
@@ -19,11 +22,14 @@ export default function ActionCard({
   onSave,
   onCancel,
   isSaving,
-  onRequestCommission
+  onRequestCommission,
+  isForSale = false,
+  price,
+  currency = 'EUR'
 }: Readonly<ActionCardProps>) {
   if (isOwner) {
     return (
-      <aside className="lg:col-span-5 sticky top-24">
+      <div className="w-full">
         <div className="p-10 bg-surface-container-lowest rounded-2xl shadow-[0_10px_40px_rgba(122,86,66,0.06)] border border-outline-variant/10 space-y-8">
           <div className="space-y-2">
             <span className="text-[10px] font-bold uppercase tracking-widest text-outline">Creator Control Panel</span>
@@ -79,23 +85,31 @@ export default function ActionCard({
             )}
           </div>
         </div>
-      </aside>
+      </div>
     );
   }
 
   return (
-    <aside className="lg:col-span-5 sticky top-24">
+    <div className="w-full">
       <div className="p-10 bg-surface-container-lowest rounded-2xl shadow-[0_10px_40px_rgba(122,86,66,0.06)] border border-outline-variant/10 space-y-8">
         <div className="flex justify-between items-baseline">
-          <span className="text-sm font-medium text-outline">Listing Price</span>
-          <span className="text-4xl font-extrabold font-headline text-primary">$2,400</span>
+          <span className="text-sm font-medium text-outline">
+            {isForSale ? 'Listing Price' : 'Availability'}
+          </span>
+          <span className="text-3xl font-extrabold font-headline text-primary">
+            {isForSale && price !== undefined && price !== null
+              ? new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(price)
+              : 'Not For Sale'}
+          </span>
         </div>
         
         <div className="space-y-4">
-          <button className="w-full py-4 bg-tertiary text-on-tertiary rounded-lg font-bold tracking-tight hover:opacity-90 transition-all shadow-sm flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined">shopping_cart</span>
-            Buy Now
-          </button>
+          {isForSale && (
+            <button className="w-full py-4 bg-tertiary text-on-tertiary rounded-lg font-bold tracking-tight hover:opacity-90 transition-all shadow-sm flex items-center justify-center gap-2">
+              <span className="material-symbols-outlined">shopping_cart</span>
+              Buy Now
+            </button>
+          )}
           <button className="w-full py-4 bg-primary text-on-primary rounded-lg font-bold tracking-tight hover:opacity-95 transition-all shadow-sm flex items-center justify-center gap-2">
             <span className="material-symbols-outlined">mail</span>
             Inquire via Message
@@ -123,11 +137,11 @@ export default function ActionCard({
         </div>
 
         <div className="p-4 bg-secondary-fixed/30 rounded-lg">
-          <p className="text-xs font-semibold text-secondary leading-tight line-clamp-2">
-            Interest in this piece is high. 3 other collectors have inquired in the last 24 hours.
+          <p className="text-xs font-semibold text-secondary leading-tight">
+            Inquiries are open for this piece. Contact the artist directly above.
           </p>
         </div>
       </div>
-    </aside>
+    </div>
   );
 }

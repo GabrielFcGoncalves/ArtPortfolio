@@ -15,6 +15,8 @@ public interface ArtPieceRepository extends JpaRepository<ArtPiece, UUID> {
 
     Page<ArtPiece> findByUserIdAndIsPublishedTrue(UUID userId, Pageable pageable);
 
+    Page<ArtPiece> findByIsPublishedTrue(Pageable pageable);
+
     @Query("SELECT a FROM ArtPiece a LEFT JOIN FETCH a.assets WHERE a.user.id = :userId")
     Page<ArtPiece> findByUserId(@Param("userId") UUID userId, Pageable pageable);
 

@@ -28,8 +28,21 @@ public class ArtPieceResponseDTO {
     @JsonProperty("keycloak_id")
     private String keycloakId;
     
+    @JsonProperty("username")
+    private String username;
+
+    @JsonProperty("artist_avatar_url")
+    private String artistAvatarUrl;
+
     @JsonProperty("is_published")
     private boolean isPublished;
+
+    @JsonProperty("is_for_sale")
+    private boolean isForSale;
+
+    private java.math.BigDecimal price;
+
+    private String currency;
     
     private List<ArtPieceAssetResponseDTO> assets;
 

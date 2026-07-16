@@ -1,7 +1,6 @@
 'use client';
 
 import {useState}from 'react';
-import Image from 'next/image';
 
 interface ArtworkCarouselProps {
   assets?: Array<{ id: string; downloadUrl?: string; blobUrl?: string; sequenceOrder: number }>;
@@ -23,13 +22,12 @@ export default function ArtworkCarousel({ assets = [], title = "Artwork" }: Read
 
   return (
     <section className="mb-20">
-      <div className="relative group aspect-[16/9] w-full overflow-hidden rounded-xl bg-surface-container-low border border-outline-variant/10">
+      <div className="relative group max-h-[70vh] aspect-[16/9] w-full overflow-hidden rounded-xl bg-surface-container-low border border-outline-variant/10 flex items-center justify-center">
         {images.length > 0 && (
           <img
-            className="object-cover transition-transform duration-700 group-hover:scale-105" 
+            className="max-w-full max-h-full object-contain transition-transform duration-700 group-hover:scale-[1.02]" 
             src={images[activeIndex]} 
             alt={`${title} - View ${activeIndex + 1}`} 
-            sizes="100vw"
           />
         )}
         

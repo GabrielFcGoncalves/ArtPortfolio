@@ -27,6 +27,13 @@ public class PortfolioController {
 
     private final PortfolioService portfolioService;
 
+    @GetMapping("/api/portfolio")
+    public ResponseEntity<PaginatedResponse<ArtPieceResponseDTO>> getAllArtworks(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "12") int limit) {
+        return ResponseEntity.ok(portfolioService.getAllArtworks(page, limit));
+    }
+
     @GetMapping("/api/users/{userId}/portfolio")
     public ResponseEntity<PaginatedResponse<ArtPieceResponseDTO>> getPortfolio(
             @PathVariable UUID userId,

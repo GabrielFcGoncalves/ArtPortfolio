@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useKeycloak } from '@react-keycloak/web';
@@ -146,17 +145,13 @@ export default function Navbar() {
             >
               Create
             </button>
-            <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-primary/10 relative">
-              <Link href="/me" className="hidden sm:block bg-tertiary-container text-on-tertiary-container px-5 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition-all active:scale-95 duration-150 font-body">
-              <Image 
-                fill
-                className="object-cover"
+            <Link href="/me" className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-primary/10 relative block hover:opacity-90 active:scale-95 transition-all shrink-0">
+              <img 
+                className="absolute inset-0 w-full h-full object-cover"
                 alt="User Profile" 
                 src={defaultAvatar} 
-                sizes="32px"
               />
-              </Link>
-            </div>
+            </Link>
           </div>
         </div>
       </nav>

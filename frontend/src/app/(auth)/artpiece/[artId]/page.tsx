@@ -4,9 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useKeycloak } from '@react-keycloak/web';
 import ArtworkCarousel from '@/components/artpiece/ArtworkCarousel';
-import ArtworkDetails from '@/components/artpiece/ArtworkDetails';
+import ArtworkDetails, { ArtworkHeader } from '@/components/artpiece/ArtworkDetails';
 import ActionCard from '@/components/artpiece/ActionCard';
-import ArtistNotes from '@/components/artpiece/ArtistNotes';
 import CommentSection from '@/components/artpiece/commentSection';
 import ArtPieceFooter from '@/components/artpiece/ArtPieceFooter';
 import { portfolioService } from '@/services/api_client';
@@ -118,41 +117,65 @@ export default function ArtPiecePage() {
     openCommissionModal(artistId, artistUsername);
   };
 
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 2) {
+      window.history.back();
+    } else {
+      router.push('/explore');
+    }
+  };
+
   return (
     <div className="bg-surface text-on-surface-variant min-h-screen selection:bg-primary-container selection:text-on-primary-container">
-      <main className="pt-24 pb-32 max-w-screen-xl mx-auto px-6">
-        {/* Visual Presentation */}
-        <ArtworkCarousel assets={pieceData.assets} title={pieceData.title} />
+      <main className="pt-28 pb-16 max-w-screen-2xl mx-auto px-8 relative">
+        <button 
+          type="button"
+          onClick={handleBack}
+          className="fixed top-[110px] left-4 lg:left-8 xl:left-12 flex items-center justify-center w-10 h-10 rounded-full bg-surface-container-low hover:bg-surface-container-medium border border-outline-variant/10 text-outline hover:text-primary transition-all active:scale-95 group cursor-pointer shadow-md z-30"
+        >
+          <span className="material-symbols-outlined text-lg transition-transform group-hover:-translate-x-0.5">arrow_back</span>
+        </button>
 
-        {/* Content & Action Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
-          {/* Main Context */}
-          <ArtworkDetails 
-            title={pieceData.title} 
-            description={pieceData.description} 
-            createdAt={pieceData.created_at} 
-            isEditing={isEditing}
-            editTitle={editTitle}
-            editDescription={editDescription}
-            onChangeTitle={setEditTitle}
-            onChangeDescription={setEditDescription}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start animate-fade-in">
+          {/* Left Column: Details, Actions, and Comments */}
+          <div className="lg:col-span-5 space-y-12 min-w-0">
+            <ArtworkHeader 
+              title={pieceData.title} 
+              createdAt={pieceData.created_at} 
+              isEditing={isEditing}
+              editTitle={editTitle}
+              onChangeTitle={setEditTitle}
+              username={pieceData.username}
+              artistAvatarUrl={pieceData.artist_avatar_url}
+            />
 
-          {/* Commerce & Interaction / Owner Actions */}
-          <ActionCard 
-            isOwner={isOwner}
-            isEditing={isEditing}
-            onEdit={() => setIsEditing(true)}
-            onDelete={handleDelete}
-            onSave={handleSave}
-            onCancel={handleCancel}
-            isSaving={isSaving}
-            onRequestCommission={!isOwner ? handleRequestCommission : undefined}
-          />
+            <ArtworkDetails 
+              description={pieceData.description} 
+              isEditing={isEditing}
+              editDescription={editDescription}
+              onChangeDescription={setEditDescription}
+            />
+
+            <ActionCard 
+              isOwner={isOwner}
+              isEditing={isEditing}
+              onEdit={() => setIsEditing(true)}
+              onDelete={handleDelete}
+              onSave={handleSave}
+              onCancel={handleCancel}
+              isSaving={isSaving}
+              onRequestCommission={!isOwner ? handleRequestCommission : undefined}
+              isForSale={pieceData.is_for_sale}
+              price={pieceData.price}
+              currency={pieceData.currency}
+            />
+          </div>
+
+          {/* Right Column: Sticky Image Showcase */}
+          <div className="lg:col-span-7 lg:sticky lg:top-32 w-full">
+            <ArtworkCarousel assets={pieceData.assets} title={pieceData.title} />
+          </div>
         </div>
-
-        {/* Insights & Context */}
-        <ArtistNotes />
 
         {/* Community & Feedback */}
         <CommentSection artId={artId as string} />

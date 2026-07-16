@@ -72,6 +72,16 @@ export const portfolioService = {
   },
 
   /**
+   * Fetch all published artworks across the platform.
+   */
+  getAllArtworks: async (page = 1, limit = 12) => {
+    const { data } = await apiClient.get('/portfolio', {
+      params: { page, limit }
+    });
+    return data;
+  },
+
+  /**
    * Remove a piece from the Studio archives permanently.
    */
   deletePiece: async (pieceId: string) => {

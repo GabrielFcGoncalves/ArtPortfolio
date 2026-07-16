@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { useKeycloak } from '@react-keycloak/web';
 import { commentService, Comment } from '@/services/api_client';
 
@@ -11,9 +10,8 @@ const RenderAvatar = ({ username, avatarUrl }: { username: string; avatarUrl?: s
   if (avatarUrl && !imgError) {
     return (
       <div className="w-10 h-10 rounded-full overflow-hidden relative border border-outline-variant/10 shrink-0">
-        <Image 
-          fill
-          className="object-cover grayscale hover:grayscale-0 transition-all duration-500" 
+        <img 
+          className="absolute inset-0 w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" 
           src={avatarUrl} 
           alt={username} 
           onError={() => setImgError(true)}
