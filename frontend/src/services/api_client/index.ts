@@ -3,3 +3,4 @@ export * from './art.service';
 export * from './portfolio.service';
 export * from './commission.service';
 export * from './user.service';
+export * from './comment.service';

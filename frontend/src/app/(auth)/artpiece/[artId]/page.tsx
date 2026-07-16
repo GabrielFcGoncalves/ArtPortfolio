@@ -7,7 +7,7 @@ import ArtworkCarousel from '@/components/artpiece/ArtworkCarousel';
 import ArtworkDetails from '@/components/artpiece/ArtworkDetails';
 import ActionCard from '@/components/artpiece/ActionCard';
 import ArtistNotes from '@/components/artpiece/ArtistNotes';
-import CollectorCommunity from '@/components/artpiece/CollectorCommunity';
+import CommentSection from '@/components/artpiece/commentSection';
 import ArtPieceFooter from '@/components/artpiece/ArtPieceFooter';
 import { portfolioService } from '@/services/api_client';
 import { useModals } from '@/providers/ModalProvider';
@@ -155,7 +155,7 @@ export default function ArtPiecePage() {
         <ArtistNotes />
 
         {/* Community & Feedback */}
-        <CollectorCommunity />
+        <CommentSection artId={artId as string} />
       </main>
 
       {/* Boutique Footer */}
