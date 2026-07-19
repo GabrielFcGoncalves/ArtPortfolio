@@ -33,7 +33,7 @@ export function SaleStatusSettings({ errors }: SaleStatusSettingsProps) {
           </div>
           {saleStatus === 'fixed' && (
             <div className={`ml-8 flex items-center bg-surface-container-low rounded-lg px-4 py-2 border ${errors.price ? 'border-error' : 'border-transparent'}`}>
-              <span className="text-primary font-bold mr-2 font-headline">$</span>
+              <span className="text-primary font-bold mr-2 font-headline">€</span>
               <input 
                 type="number" 
                 value={price} 
@@ -41,7 +41,7 @@ export function SaleStatusSettings({ errors }: SaleStatusSettingsProps) {
                 placeholder="0.00" 
                 className="bg-transparent border-none focus:ring-0 w-full text-on-surface font-headline font-bold text-lg p-0" 
               />
-              <span className="text-xs font-bold text-outline-variant ml-2 uppercase">USD</span>
+              <span className="text-xs font-bold text-outline-variant ml-2 uppercase">EUR</span>
             </div>
           )}
           {saleStatus === 'fixed' && errors.price && <p className="ml-8 mt-2 text-error text-[11px] font-bold">{errors.price}</p>}

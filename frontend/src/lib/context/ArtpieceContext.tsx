@@ -16,6 +16,14 @@ export interface ArtpieceFormData {
     title: string;
     description: string;
     tags: string[];
+    medium?: string;
+    category?: string;
+    width?: number;
+    height?: number;
+    depth?: number;
+    dimensionUnit: string;
+    weight?: number;
+    year?: number;
   };
   protection: {
     disableRightClick: boolean;
@@ -30,6 +38,7 @@ export interface ArtpieceFormData {
     price: string;
     isPublished: boolean;
     nsfw: boolean;
+    isFramed: boolean;
   };
 }
 
@@ -48,7 +57,7 @@ const ArtpieceContext = createContext<ArtpieceContextType | null>(null);
 export function ArtpieceProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [formData, setFormData] = useState<ArtpieceFormData>({
     assets: [],
-    metadata: { title: '', description: '', tags: [] },
+    metadata: { title: '', description: '', tags: [], dimensionUnit: 'cm' },
     protection: {
       disableRightClick: true,
       noAI: true,
@@ -62,6 +71,7 @@ export function ArtpieceProvider({ children }: Readonly<{ children: React.ReactN
       price: '0.00',
       isPublished: true,
       nsfw: false,
+      isFramed: false,
     }
   });
 
@@ -159,6 +169,18 @@ export function ArtpieceProvider({ children }: Readonly<{ children: React.ReactN
       title: formData.metadata.title,
       description: formData.metadata.description,
       tags: formData.metadata.tags.join(','),
+      medium: formData.metadata.medium,
+      category: formData.metadata.category,
+      width: formData.metadata.width,
+      height: formData.metadata.height,
+      depth: formData.metadata.depth,
+      dimension_unit: formData.metadata.dimensionUnit,
+      weight: formData.metadata.weight,
+      year: formData.metadata.year,
+      is_framed: formData.publish.isFramed,
+      is_for_sale: formData.publish.saleStatus === 'fixed',
+      price: formData.publish.saleStatus === 'fixed' ? parseFloat(formData.publish.price) : 0,
+      currency: 'EUR',
       files: files,
       isPublished: true
     };

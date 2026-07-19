@@ -8,8 +8,9 @@ import ArtworkDetails, { ArtworkHeader } from '@/components/artpiece/ArtworkDeta
 import ActionCard from '@/components/artpiece/ActionCard';
 import CommentSection from '@/components/artpiece/commentSection';
 import ArtPieceFooter from '@/components/artpiece/ArtPieceFooter';
-import { portfolioService } from '@/services/api_client';
+import { portfolioService, favoriteService, purchaseService } from '@/services/api_client';
 import { useModals } from '@/providers/ModalProvider';
+import apiClient from '@/services/api_client/apiClient';
 
 /**
  * ArtPiecePage component.
@@ -29,6 +30,9 @@ export default function ArtPiecePage() {
   const [editDescription, setEditDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteCount, setFavoriteCount] = useState(0);
+
   useEffect(() => {
     if (artId) {
       portfolioService.getArtworkById(artId as string, 1200, 900)
@@ -36,14 +40,61 @@ export default function ArtPiecePage() {
           setArtPiece(data);
           setEditTitle(data.title || '');
           setEditDescription(data.description || '');
+          setFavoriteCount(data.favorite_count || 0);
           setLoading(false);
+          
+          // Record view (fire and forget)
+          portfolioService.recordView(artId as string).catch(err => console.error("Failed to record view:", err));
         })
         .catch(err => {
           console.error("Failed to fetch artwork:", err);
           setLoading(false);
         });
+
+      if (initialized && keycloak?.authenticated) {
+        favoriteService.isFavorited(artId as string)
+          .then(res => setIsFavorited(res.is_favorited))
+          .catch(err => console.error("Failed to fetch favorite status:", err));
+      }
     }
-  }, [artId]);
+  }, [artId, initialized, keycloak?.authenticated]);
+
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  useEffect(() => {
+    const artistId = artPiece?.user_id || artPiece?.userId;
+    if (artistId && initialized && keycloak?.authenticated) {
+      apiClient.get(`/users/${artistId}/is-following`)
+        .then(({ data }) => setIsFollowing(!!data))
+        .catch(err => console.error("Failed to check follow status:", err));
+    }
+  }, [artPiece, initialized, keycloak?.authenticated]);
+
+  const handleFollowToggle = async () => {
+    const artistId = pieceData.user_id || pieceData.userId;
+    if (!artistId) return;
+
+    if (!initialized || !keycloak?.authenticated) {
+      alert("Please log in to follow artists.");
+      return;
+    }
+
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await apiClient.delete(`/users/${artistId}/follow`);
+        setIsFollowing(false);
+      } else {
+        await apiClient.post(`/users/${artistId}/follow`);
+        setIsFollowing(true);
+      }
+    } catch (err) {
+      console.error("Failed to toggle follow:", err);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -79,6 +130,47 @@ export default function ArtPiecePage() {
     } catch (err) {
       console.error("Failed to delete artwork:", err);
       alert("Failed to delete artwork. Please try again.");
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!initialized || !keycloak?.authenticated) {
+      alert("Please log in to favorite artworks.");
+      return;
+    }
+    
+    // Optimistic UI update
+    const newIsFavorited = !isFavorited;
+    const newCount = isFavorited ? Math.max(0, favoriteCount - 1) : favoriteCount + 1;
+    setIsFavorited(newIsFavorited);
+    setFavoriteCount(newCount);
+
+    try {
+      const res = await favoriteService.toggleFavorite(artId as string);
+      setIsFavorited(res.is_favorited);
+      setFavoriteCount(res.favorite_count);
+    } catch (err) {
+      console.error("Failed to toggle favorite:", err);
+      // Revert optimistic update
+      setIsFavorited(!newIsFavorited);
+      setFavoriteCount(isFavorited ? newCount + 1 : Math.max(0, newCount - 1));
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!initialized || !keycloak?.authenticated) {
+      alert("Please log in to purchase artworks.");
+      return;
+    }
+
+    try {
+      const { checkout_url } = await purchaseService.createCheckout(artId as string);
+      if (checkout_url) {
+        window.location.href = checkout_url;
+      }
+    } catch (err: any) {
+      console.error("Purchase failed:", err);
+      alert(err.response?.data?.message || "Failed to initialize checkout. Please try again.");
     }
   };
 
@@ -147,6 +239,11 @@ export default function ArtPiecePage() {
               onChangeTitle={setEditTitle}
               username={pieceData.username}
               artistAvatarUrl={pieceData.artist_avatar_url}
+              artistId={pieceData.user_id || pieceData.userId}
+              isSelf={isOwner}
+              isFollowing={isFollowing}
+              followLoading={followLoading}
+              onFollowToggle={handleFollowToggle}
             />
 
             <ArtworkDetails 
@@ -154,6 +251,15 @@ export default function ArtPiecePage() {
               isEditing={isEditing}
               editDescription={editDescription}
               onChangeDescription={setEditDescription}
+              medium={pieceData.medium}
+              category={pieceData.category}
+              width={pieceData.width}
+              height={pieceData.height}
+              depth={pieceData.depth}
+              dimensionUnit={pieceData.dimension_unit}
+              weight={pieceData.weight}
+              year={pieceData.year}
+              isFramed={pieceData.is_framed}
             />
 
             <ActionCard 
@@ -168,6 +274,10 @@ export default function ArtPiecePage() {
               isForSale={pieceData.is_for_sale}
               price={pieceData.price}
               currency={pieceData.currency}
+              isFavorited={isFavorited}
+              favoriteCount={favoriteCount}
+              onToggleFavorite={!isOwner ? handleToggleFavorite : undefined}
+              onBuyNow={handleBuyNow}
             />
           </div>
 

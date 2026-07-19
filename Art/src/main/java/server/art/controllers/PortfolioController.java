@@ -30,8 +30,11 @@ public class PortfolioController {
     @GetMapping("/api/portfolio")
     public ResponseEntity<PaginatedResponse<ArtPieceResponseDTO>> getAllArtworks(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "12") int limit) {
-        return ResponseEntity.ok(portfolioService.getAllArtworks(page, limit));
+            @RequestParam(defaultValue = "12") int limit,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(portfolioService.getAllArtworks(page, limit, category, search, sort));
     }
 
     @GetMapping("/api/users/{userId}/portfolio")

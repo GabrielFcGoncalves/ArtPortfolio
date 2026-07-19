@@ -60,3 +60,8 @@ aws:
 
 imgproxy:
   url: ${IMGPROXY_URL}
+
+stripe:
+  secret-key: ${STRIPE_API_KEY}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+  platform-fee-percent: 15

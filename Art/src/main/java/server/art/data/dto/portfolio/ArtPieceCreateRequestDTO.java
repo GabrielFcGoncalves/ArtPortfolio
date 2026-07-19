@@ -18,12 +18,34 @@ public class ArtPieceCreateRequestDTO {
     private String tags;
     private List<UploadFileDTO> files;
     
+    private String medium;
+    private Double width;
+    private Double height;
+    private Double depth;
+    
+    @JsonProperty("dimension_unit")
+    private String dimensionUnit;
+    
+    private Double weight;
+    private Integer year;
+    
+    @JsonProperty("is_framed")
+    private boolean isFramed;
+    
+    private String category;
+    
     @JsonProperty("commission_id")
     private UUID commissionId;
     
     @JsonProperty("is_published")
     @Builder.Default
     private boolean isPublished = true;
+
+    @JsonProperty("is_for_sale")
+    private boolean isForSale;
+
+    private java.math.BigDecimal price;
+    private String currency;
 
     @Data
     @Builder

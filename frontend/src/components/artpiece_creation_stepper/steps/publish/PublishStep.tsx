@@ -35,6 +35,18 @@ export default function PublishStep({ errors }: Props) {
             <span className="block text-xs text-on-tertiary-container/70">Flag this artwork for platform safety. Content may be blurred for some users.</span>
           </div>
         </label>
+        <label className="flex items-center p-5 bg-tertiary-container/10 border border-tertiary/20 rounded-xl cursor-pointer hover:bg-tertiary-container/20 transition-colors mt-4">
+          <input 
+            type="checkbox" 
+            checked={formData.publish.isFramed}
+            onChange={(e) => updateField('publish.isFramed', e.target.checked)}
+            className="w-5 h-5 rounded border-tertiary text-tertiary focus:ring-tertiary" 
+          />
+          <div className="ml-4">
+            <span className="block font-bold text-on-tertiary-container text-sm">Artwork is Framed</span>
+            <span className="block text-xs text-on-tertiary-container/70">Indicate whether this artwork comes with a frame included in the price.</span>
+          </div>
+        </label>
       </section>
     </div>
   );

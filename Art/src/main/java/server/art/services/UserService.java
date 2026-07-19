@@ -235,6 +235,7 @@ public class UserService {
                 .isVerified(user.isVerified())
                 .isFeatured(user.isFeatured())
                 .followerCount(user.getFollowerCount())
+                .followingCount(user.getFollowingCount())
                 .commissionCount(user.getCommissionCount())
                 .averageRating(user.getAverageRating())
                 .createdAt(user.getCreatedAt())

@@ -44,6 +44,35 @@ public class ArtPieceResponseDTO {
 
     private String currency;
     
+    private String medium;
+    
+    private Double width;
+    
+    private Double height;
+    
+    private Double depth;
+    
+    @JsonProperty("dimension_unit")
+    private String dimensionUnit;
+    
+    private Double weight;
+    
+    private Integer year;
+    
+    @JsonProperty("is_framed")
+    private boolean isFramed;
+    
+    private String category;
+    
+    @JsonProperty("view_count")
+    private int viewCount;
+    
+    @JsonProperty("favorite_count")
+    private int favoriteCount;
+    
+    @JsonProperty("is_favorited")
+    private boolean isFavorited;
+    
     private List<ArtPieceAssetResponseDTO> assets;
 
     @JsonProperty("is_published")

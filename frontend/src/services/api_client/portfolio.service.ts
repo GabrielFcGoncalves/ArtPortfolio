@@ -74,9 +74,9 @@ export const portfolioService = {
   /**
    * Fetch all published artworks across the platform.
    */
-  getAllArtworks: async (page = 1, limit = 12) => {
+  getAllArtworks: async (page = 1, limit = 12, category?: string, search?: string, sort?: string) => {
     const { data } = await apiClient.get('/portfolio', {
-      params: { page, limit }
+      params: { page, limit, category, search, sort }
     });
     return data;
   },
@@ -86,6 +86,14 @@ export const portfolioService = {
    */
   deletePiece: async (pieceId: string) => {
     const { data } = await apiClient.delete(`/users/me/portfolio/${pieceId}`);
+    return data;
+  },
+
+  /**
+   * Record a view for an artwork.
+   */
+  recordView: async (pieceId: string) => {
+    const { data } = await apiClient.post(`/portfolio/${pieceId}/view`);
     return data;
   }
 };

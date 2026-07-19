@@ -12,6 +12,10 @@ interface ActionCardProps {
   isForSale?: boolean;
   price?: number;
   currency?: string;
+  isFavorited?: boolean;
+  favoriteCount?: number;
+  onToggleFavorite?: () => void;
+  onBuyNow?: () => void;
 }
 
 export default function ActionCard({
@@ -25,7 +29,11 @@ export default function ActionCard({
   onRequestCommission,
   isForSale = false,
   price,
-  currency = 'EUR'
+  currency = 'EUR',
+  isFavorited = false,
+  favoriteCount = 0,
+  onToggleFavorite,
+  onBuyNow
 }: Readonly<ActionCardProps>) {
   if (isOwner) {
     return (
@@ -103,9 +111,30 @@ export default function ActionCard({
           </span>
         </div>
         
+        <div className="flex justify-between items-center bg-surface-container-low p-4 rounded-xl border border-outline-variant/20">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-outline">favorite</span>
+            <span className="text-sm font-bold text-on-surface">{favoriteCount}</span>
+            <span className="text-xs text-on-surface-variant">Favorites</span>
+          </div>
+          {onToggleFavorite && (
+            <button 
+              onClick={onToggleFavorite}
+              className={`p-2 rounded-full transition-all flex items-center justify-center ${isFavorited ? 'bg-primary/10 text-primary' : 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'}`}
+            >
+              <span className={`material-symbols-outlined ${isFavorited ? 'fill-current' : ''}`}>
+                favorite
+              </span>
+            </button>
+          )}
+        </div>
+        
         <div className="space-y-4">
           {isForSale && (
-            <button className="w-full py-4 bg-tertiary text-on-tertiary rounded-lg font-bold tracking-tight hover:opacity-90 transition-all shadow-sm flex items-center justify-center gap-2">
+            <button 
+              onClick={onBuyNow}
+              className="w-full py-4 bg-tertiary text-on-tertiary rounded-lg font-bold tracking-tight hover:opacity-90 transition-all shadow-sm flex items-center justify-center gap-2"
+            >
               <span className="material-symbols-outlined">shopping_cart</span>
               Buy Now
             </button>

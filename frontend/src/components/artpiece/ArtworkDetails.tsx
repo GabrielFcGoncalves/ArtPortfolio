@@ -1,10 +1,20 @@
 import React from 'react';
+import Link from 'next/link';
 
 interface ArtworkDetailsProps {
   description?: string;
   isEditing?: boolean;
   editDescription?: string;
   onChangeDescription?: (val: string) => void;
+  medium?: string;
+  category?: string;
+  width?: number;
+  height?: number;
+  depth?: number;
+  dimensionUnit?: string;
+  weight?: number;
+  year?: number;
+  isFramed?: boolean;
 }
 
 interface ArtworkHeaderProps {
@@ -15,6 +25,11 @@ interface ArtworkHeaderProps {
   onChangeTitle?: (val: string) => void;
   username?: string;
   artistAvatarUrl?: string;
+  artistId?: string;
+  isSelf?: boolean;
+  isFollowing?: boolean;
+  followLoading?: boolean;
+  onFollowToggle?: () => void;
 }
 
 const RenderAvatar = ({ username, avatarUrl }: { username: string; avatarUrl?: string }) => {
@@ -48,7 +63,12 @@ export function ArtworkHeader({
   editTitle,
   onChangeTitle,
   username,
-  artistAvatarUrl
+  artistAvatarUrl,
+  artistId,
+  isSelf,
+  isFollowing,
+  followLoading,
+  onFollowToggle
 }: Readonly<ArtworkHeaderProps>) {
   const displayTitle = title || "The Ethereal Nomad";
   const timeText = createdAt 
@@ -77,12 +97,41 @@ export function ArtworkHeader({
         <h1 className="text-4xl md:text-5xl font-extrabold font-headline text-primary tracking-tight leading-tight">{displayTitle}</h1>
       )}
 
-      <div className="flex items-center gap-4 pt-2">
-        <RenderAvatar username={username || 'Artist'} avatarUrl={artistAvatarUrl} />
-        <div>
-          <p className="text-sm font-semibold text-on-surface">{username || 'Artist'}</p>
-          <p className="text-xs text-outline font-light">Contemporary Abstract Artist</p>
+      <div className="flex items-center justify-between border-t border-b border-outline-variant/10 py-6">
+        <div className="flex items-center gap-4">
+          {artistId ? (
+            <Link href={`/users/${artistId}`} className="hover:opacity-85 transition-opacity">
+              <RenderAvatar username={username || 'Artist'} avatarUrl={artistAvatarUrl} />
+            </Link>
+          ) : (
+            <RenderAvatar username={username || 'Artist'} avatarUrl={artistAvatarUrl} />
+          )}
+          <div>
+            {artistId ? (
+              <Link href={`/users/${artistId}`} className="hover:underline animate-fade-in">
+                <p className="text-sm font-bold text-on-surface">{username || 'Artist'}</p>
+              </Link>
+            ) : (
+              <p className="text-sm font-bold text-on-surface">{username || 'Artist'}</p>
+            )}
+            <p className="text-xs text-outline font-light">Contemporary Abstract Artist</p>
+          </div>
         </div>
+
+        {artistId && !isSelf && onFollowToggle && (
+          <button
+            type="button"
+            onClick={onFollowToggle}
+            disabled={followLoading}
+            className={`px-6 py-2 rounded-full font-bold text-xs shadow-md transition-all active:scale-95 disabled:opacity-50 ${
+              isFollowing
+                ? 'bg-surface-container-highest text-on-surface hover:bg-surface-container-high'
+                : 'bg-primary text-on-primary hover:opacity-90'
+            }`}
+          >
+            {isFollowing ? 'Unfollow' : 'Follow'}
+          </button>
+        )}
       </div>
     </header>
   );
@@ -92,13 +141,24 @@ export default function ArtworkDetails({
   description,
   isEditing,
   editDescription,
-  onChangeDescription
+  onChangeDescription,
+  medium,
+  category,
+  width,
+  height,
+  depth,
+  dimensionUnit,
+  weight,
+  year,
+  isFramed
 }: Readonly<ArtworkDetailsProps>) {
   const displayDescription = description || `"The Ethereal Nomad" explores the intersection of transient human presence and the immutable groundedness of the earth. Through layered glazes of raw sienna and sage, the piece invites the viewer into a silent dialogue with the unknown horizons of our internal landscape.`;
 
+  const hasSpecs = medium || category || width || height || depth || weight || year || isFramed;
+
   return (
     <div className="w-full space-y-10">
-      <div className="prose prose-stone leading-relaxed border-t border-outline-variant/10 pt-8">
+      <div className="prose prose-stone leading-relaxed border-b border-outline-variant/10 pb-8">
         {isEditing ? (
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-outline mb-2">Artwork Description</label>
@@ -116,6 +176,52 @@ export default function ArtworkDetails({
           </p>
         )}
       </div>
+
+      {hasSpecs && !isEditing && (
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 p-6 space-y-4">
+          <h3 className="text-sm font-bold text-on-surface uppercase tracking-widest border-b border-outline-variant/10 pb-2">Artwork Specifications</h3>
+          <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
+            {category && (
+              <div>
+                <span className="block text-xs font-semibold text-outline">Category</span>
+                <span className="font-medium text-on-surface">{category}</span>
+              </div>
+            )}
+            {medium && (
+              <div>
+                <span className="block text-xs font-semibold text-outline">Medium</span>
+                <span className="font-medium text-on-surface">{medium}</span>
+              </div>
+            )}
+            {(width || height || depth) && (
+              <div>
+                <span className="block text-xs font-semibold text-outline">Dimensions</span>
+                <span className="font-medium text-on-surface">
+                  {width || 0} × {height || 0} {depth ? `× ${depth}` : ''} {dimensionUnit || 'cm'}
+                </span>
+              </div>
+            )}
+            {weight && (
+              <div>
+                <span className="block text-xs font-semibold text-outline">Weight</span>
+                <span className="font-medium text-on-surface">{weight} kg</span>
+              </div>
+            )}
+            {year && (
+              <div>
+                <span className="block text-xs font-semibold text-outline">Year Created</span>
+                <span className="font-medium text-on-surface">{year}</span>
+              </div>
+            )}
+            {isFramed !== undefined && (
+              <div>
+                <span className="block text-xs font-semibold text-outline">Framing</span>
+                <span className="font-medium text-on-surface">{isFramed ? 'Framed' : 'Unframed'}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

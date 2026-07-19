@@ -21,4 +21,12 @@ public interface ArtPieceRepository extends JpaRepository<ArtPiece, UUID> {
     Page<ArtPiece> findByUserId(@Param("userId") UUID userId, Pageable pageable);
 
     long countByUserId(UUID userId);
+
+    @Query("SELECT a FROM ArtPiece a WHERE a.isPublished = true " +
+           "AND (:category IS NULL OR a.category = :category) " +
+           "AND (:search IS NULL OR LOWER(a.title) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(a.tags) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(a.description) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<ArtPiece> findByFilters(
+            @Param("category") String category,
+            @Param("search") String search,
+            Pageable pageable);
 }

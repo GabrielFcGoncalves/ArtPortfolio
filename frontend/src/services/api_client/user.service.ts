@@ -9,6 +9,7 @@ export interface PublicProfile {
   isVerified: boolean;
   isFeatured: boolean;
   followerCount: number;
+  followingCount: number;
   commissionCount: number;
   averageRating: number;
   createdAt: string;

@@ -43,6 +43,26 @@ public class ArtPiece {
     @Builder.Default
     private String currency = "EUR";
     
+    private String medium;
+    
+    private Double width;
+    
+    private Double height;
+    
+    private Double depth;
+    
+    @Builder.Default
+    private String dimensionUnit = "cm";
+    
+    private Double weight;
+    
+    private Integer year;
+    
+    @Builder.Default
+    private boolean isFramed = false;
+    
+    private String category;
+    
     @Column(nullable = false)
     @Builder.Default
     private String status = "public";
@@ -55,6 +75,12 @@ public class ArtPiece {
     // ✅ Denormalized count for fast reads (update on asset add/delete)
     @Builder.Default
     private int assetCount = 0;
+    
+    @Builder.Default
+    private int viewCount = 0;
+    
+    @Builder.Default
+    private int favoriteCount = 0;
     
     // ✅ NEW: One-to-many relationship to assets
     @Builder.Default

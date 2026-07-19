@@ -4,7 +4,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import { portfolioService } from '@/services/api_client';
 import ArtworkCard from './ArtworkCard';
 
-export default function ArtworkGrid() {
+interface ArtworkGridProps {
+  category?: string;
+  sort?: string;
+  search?: string;
+}
+
+export default function ArtworkGrid({ category, sort, search }: ArtworkGridProps) {
   const [artworks, setArtworks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -20,7 +26,7 @@ export default function ArtworkGrid() {
         setLoadingMore(true);
       }
 
-      const res = await portfolioService.getAllArtworks(pageNum, 15);
+      const res = await portfolioService.getAllArtworks(pageNum, 15, category, search, sort);
       
       if (pageNum === 1) {
         setArtworks(res.data);
@@ -39,8 +45,11 @@ export default function ArtworkGrid() {
   };
 
   useEffect(() => {
+    setArtworks([]);
+    setPage(1);
+    setHasMore(true);
     fetchArtworks(1);
-  }, []);
+  }, [category, sort, search]);
 
   useEffect(() => {
     if (!hasMore || loading || loadingMore) return;
@@ -87,6 +96,9 @@ export default function ArtworkGrid() {
                 title={artwork.title}
                 username={artwork.username || "Anonymous Artist"}
                 coverImage={artwork.cover_image}
+                views={artwork.view_count?.toString()}
+                likes={artwork.favorite_count?.toString()}
+                isLiked={artwork.is_favorited}
               />
             ))}
           </div>

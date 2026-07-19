@@ -7,6 +7,10 @@ COMPOSE_FILE="docker-compose.beta.yaml"
 # to ensure the path to the compose file is always correct.
 cd "$(dirname "$0")"
 
+./stripe-listen.sh
+
+
+
 if [[ "$1" == "--down" ]]; then
     if [[ "$2" == "-v" ]]; then
         echo "Stopping containers and removing volumes..."

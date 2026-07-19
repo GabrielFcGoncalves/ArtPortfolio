@@ -1,6 +1,7 @@
 import React from 'react';
 import { BasicInfo } from './BasicInfo';
 import { CategoryInput } from './CategoryInput';
+import { SpecificationsInput } from './SpecificationsInput';
 import { CurationTip } from './CurationTip';
 import { useArtpieceForm } from '@/lib/context/ArtpieceContext';
 
@@ -32,6 +33,8 @@ export default function MetadataStep({ errors }: Props) {
         onAdd={handleAddCategory} 
         onRemove={handleRemoveCategory} 
       />
+
+      <SpecificationsInput />
 
       <CurationTip />
     </div>

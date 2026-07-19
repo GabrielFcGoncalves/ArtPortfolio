@@ -55,9 +55,29 @@ public class PortfolioService {
     }
 
     @Transactional(readOnly = true)
-    public PaginatedResponse<ArtPieceResponseDTO> getAllArtworks(int page, int limit) {
-        PageRequest pageRequest = PageRequest.of(page - 1, limit, Sort.by("createdAt").descending());
-        Page<ArtPiece> piecesPage = artPieceRepository.findByIsPublishedTrue(pageRequest);
+    public PaginatedResponse<ArtPieceResponseDTO> getAllArtworks(int page, int limit, String category, String search, String sort) {
+        Sort.Direction direction = Sort.Direction.DESC;
+        String sortBy = "createdAt";
+        
+        if ("popular".equalsIgnoreCase(sort)) {
+            sortBy = "favoriteCount";
+        } else if ("views".equalsIgnoreCase(sort)) {
+            sortBy = "viewCount";
+        }
+        
+        PageRequest pageRequest = PageRequest.of(page - 1, limit, Sort.by(direction, sortBy));
+        
+        Page<ArtPiece> piecesPage;
+        if ((category != null && !category.isBlank()) || (search != null && !search.isBlank())) {
+            piecesPage = artPieceRepository.findByFilters(
+                category != null && !category.isBlank() ? category : null,
+                search != null && !search.isBlank() ? search : null,
+                pageRequest
+            );
+        } else {
+            piecesPage = artPieceRepository.findByIsPublishedTrue(pageRequest);
+        }
+        
         return mapToPaginatedResponse(piecesPage, page, limit);
     }
 
@@ -162,6 +182,18 @@ public class PortfolioService {
                 .isForSale(piece.isForSale())
                 .price(piece.getPrice())
                 .currency(piece.getCurrency())
+                .medium(piece.getMedium())
+                .width(piece.getWidth())
+                .height(piece.getHeight())
+                .depth(piece.getDepth())
+                .dimensionUnit(piece.getDimensionUnit())
+                .weight(piece.getWeight())
+                .year(piece.getYear())
+                .isFramed(piece.isFramed())
+                .category(piece.getCategory())
+                .viewCount(piece.getViewCount())
+                .favoriteCount(piece.getFavoriteCount())
+                .isFavorited(false) // Handled by separate endpoint or injected logic later
                 .assets(assetDTOs)
                 .build();
     }
@@ -184,8 +216,20 @@ public class PortfolioService {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .tags(request.getTags())
+                .medium(request.getMedium())
+                .width(request.getWidth())
+                .height(request.getHeight())
+                .depth(request.getDepth())
+                .dimensionUnit(request.getDimensionUnit() != null ? request.getDimensionUnit() : "cm")
+                .weight(request.getWeight())
+                .year(request.getYear())
+                .isFramed(request.isFramed())
+                .category(request.getCategory())
                 .commissionId(request.getCommissionId())
                 .isPublished(request.isPublished())
+                .isForSale(request.isForSale())
+                .price(request.getPrice())
+                .currency(request.getCurrency() != null ? request.getCurrency() : "EUR")
                 .build();
 
         if (request.getFiles() != null) {
@@ -314,6 +358,31 @@ public class PortfolioService {
             piece.setPublished(request.getIsPublished());
         if (request.getTags() != null)
             piece.setTags(request.getTags());
+        if (request.getMedium() != null)
+            piece.setMedium(request.getMedium());
+        if (request.getWidth() != null)
+            piece.setWidth(request.getWidth());
+        if (request.getHeight() != null)
+            piece.setHeight(request.getHeight());
+        if (request.getDepth() != null)
+            piece.setDepth(request.getDepth());
+        if (request.getDimensionUnit() != null)
+            piece.setDimensionUnit(request.getDimensionUnit());
+        if (request.getWeight() != null)
+            piece.setWeight(request.getWeight());
+        if (request.getYear() != null)
+            piece.setYear(request.getYear());
+        if (request.getIsFramed() != null)
+            piece.setFramed(request.getIsFramed());
+        if (request.getCategory() != null)
+            piece.setCategory(request.getCategory());
+        if (request.getIsForSale() != null)
+            piece.setForSale(request.getIsForSale());
+        if (request.getPrice() != null)
+            piece.setPrice(request.getPrice());
+        if (request.getCurrency() != null)
+            piece.setCurrency(request.getCurrency());
+            
         piece.setUpdatedAt(Instant.now());
 
         artPieceRepository.save(piece);

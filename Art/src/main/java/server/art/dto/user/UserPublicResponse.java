@@ -23,6 +23,7 @@ public class UserPublicResponse {
     private boolean isVerified;
     private boolean isFeatured;
     private int followerCount;
+    private int followingCount;
     private int commissionCount;
     private BigDecimal averageRating;
     private Instant createdAt;

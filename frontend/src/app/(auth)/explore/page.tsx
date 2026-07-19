@@ -1,15 +1,27 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import FilterBar from '@/components/explore/FilterBar';
 import ArtworkGrid from '@/components/explore/ArtworkGrid';
 import ExploreFooter from '@/components/explore/ExploreFooter';
 
 export default function ExplorePage() {
+  const [category, setCategory] = useState<string>('');
+  const [sort, setSort] = useState<string>('latest');
+  const [search, setSearch] = useState<string>('');
   return (
     <div className="bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container min-h-screen">
       
       <main className="pt-24 min-h-screen">
-        <FilterBar />
-        <ArtworkGrid />
+        <FilterBar 
+          category={category} 
+          setCategory={setCategory} 
+          sort={sort} 
+          setSort={setSort} 
+          search={search} 
+          setSearch={setSearch} 
+        />
+        <ArtworkGrid category={category} sort={sort} search={search} />
       </main>
 
       <ExploreFooter />

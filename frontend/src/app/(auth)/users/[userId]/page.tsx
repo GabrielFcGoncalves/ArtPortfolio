@@ -11,6 +11,7 @@ import Image from 'next/image';
 import GalleryGrid from '@/components/me_profile/GalleryGrid';
 import type { PublicProfile } from '@/services/api_client/user.service';
 import apiClient from '@/services/api_client/apiClient';
+import FollowListModal from '@/components/profile/FollowListModal';
 
 export default function UserProfilePage() {
   const { userId } = useParams();
@@ -22,6 +23,7 @@ export default function UserProfilePage() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [activeModalTab, setActiveModalTab] = useState<'followers' | 'following' | null>(null);
 
   useEffect(() => {
     if (userId) {
@@ -164,15 +166,27 @@ export default function UserProfilePage() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
-              <div className="bg-white/50 backdrop-blur-sm p-6 rounded-2xl border border-outline-variant/5 text-center shadow-sm">
-                <p className="text-2xl font-headline font-black text-primary">{pieces.length}</p>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-outline">Pieces</p>
+            <div className="grid grid-cols-3 gap-4 w-full md:w-auto">
+              <div className="bg-white/50 backdrop-blur-sm p-4 md:p-6 rounded-2xl border border-outline-variant/5 text-center shadow-sm select-none">
+                <p className="text-xl md:text-2xl font-headline font-black text-primary">{pieces.length}</p>
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-outline">Pieces</p>
               </div>
-              <div className="bg-white/50 backdrop-blur-sm p-6 rounded-2xl border border-outline-variant/5 text-center shadow-sm">
-                <p className="text-2xl font-headline font-black text-primary">{profile.followerCount}</p>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-outline">Followers</p>
-              </div>
+              <button 
+                type="button"
+                onClick={() => setActiveModalTab('followers')}
+                className="bg-white/50 backdrop-blur-sm p-4 md:p-6 rounded-2xl border border-outline-variant/5 text-center shadow-sm hover:bg-white/80 active:scale-95 transition-all cursor-pointer group"
+              >
+                <p className="text-xl md:text-2xl font-headline font-black text-primary group-hover:text-primary-dark">{profile.followerCount}</p>
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-outline">Followers</p>
+              </button>
+              <button 
+                type="button"
+                onClick={() => setActiveModalTab('following')}
+                className="bg-white/50 backdrop-blur-sm p-4 md:p-6 rounded-2xl border border-outline-variant/5 text-center shadow-sm hover:bg-white/80 active:scale-95 transition-all cursor-pointer group"
+              >
+                <p className="text-xl md:text-2xl font-headline font-black text-primary group-hover:text-primary-dark">{profile.followingCount || 0}</p>
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-outline">Following</p>
+              </button>
             </div>
           </div>
         </section>
@@ -188,6 +202,15 @@ export default function UserProfilePage() {
       </main>
 
       <DashboardFooter />
+
+      {activeModalTab && (
+        <FollowListModal 
+          userId={profile.id}
+          username={profile.username}
+          type={activeModalTab}
+          onClose={() => setActiveModalTab(null)}
+        />
+      )}
     </div>
   );
 }
